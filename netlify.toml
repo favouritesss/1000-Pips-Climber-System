@@ -1,2 +1,8 @@
 [build]
   publish = "backend/public"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://one000-pips-climber-system.onrender.com/api/:splat"
+  status = 200
+  force = true

@@ -23,22 +23,28 @@ async function fetchDashboardData() {
     }
 
     try {
+        console.log('Fetching fresh profile data...');
         const profileRes = await fetch(`${API_URL}/auth/profile`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!profileRes.ok) throw new Error('Session expired or server unreachable');
+
         const user = await profileRes.json();
+        console.log('Profile loaded:', user.username);
 
         // Update local storage and UI with fresh data
         localStorage.setItem('user', JSON.stringify(user));
 
-        document.getElementById('balance').innerText = `$${user.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-        document.getElementById('earnings').innerText = `$${user.earnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-        document.getElementById('bonus').innerText = `$${user.referral_bonus.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-        document.getElementById('username').innerText = user.username;
+        document.getElementById('balance').innerText = `$${(user.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        document.getElementById('earnings').innerText = `$${(user.earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        document.getElementById('bonus').innerText = `$${(user.referral_bonus || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        document.getElementById('username').innerText = user.username || 'User';
 
         const welcomeNameElement = document.getElementById('welcomeName');
         if (welcomeNameElement) {
-            welcomeNameElement.innerText = (user.fullname && user.fullname.trim() !== "") ? user.fullname : user.username;
+            const displayName = (user.fullname && user.fullname.trim() !== "") ? user.fullname : user.username;
+            welcomeNameElement.innerText = displayName || 'Trader';
         }
 
         const invRes = await fetch(`${API_URL}/invest/investments`, {

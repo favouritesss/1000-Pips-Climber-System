@@ -7,11 +7,10 @@
   status = 200
 
 [[redirects]]
-  from = "/*"
+  from = "/api/*"
   to = "https://one000-pips-climber-system.onrender.com/api/:splat"
   status = 200
   force = true
-  conditions = {Path = ["/api/*"]}
 
 [[redirects]]
   from = "/*"

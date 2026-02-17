@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdraw Profits | 1000 Pips Climber System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="{ 
+    mobileMenu: false,
+    balance: 0,
+    amount: '',
+    method: 'BTC',
+    wallet: '',
+    async init() {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/auth/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const user = await res.json();
+        this.balance = user.balance;
+    },
+    async submitWithdrawal() {
+        if(!this.amount || this.amount < 10) {
+            alert('Minimum withdrawal is $10');
+            return;
+        }
+        if(this.amount > this.balance) {
+            alert('Insufficient liquid capital for this transaction.');
+            return;
+        }
+        if(!this.wallet) {
+            alert('Destination wallet address is required.');
+            return;
+        }
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/invest/withdraw', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ amount: parseFloat(this.amount), method: this.method, wallet_address: this.wallet })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if(res.ok) window.location.href = 'dashboard.html';
+    }
+}">
+    <aside class="sidebar flex flex-col p-6 overflow-y-auto custom-scrollbar"
+        :class="mobileMenu ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+        <div class="flex items-center gap-4 mb-10 px-2 lg:px-4">
+            <img src="storage/app/public/photos/1chTY0mNnf6udZ3nuhSrZn38Ch1mh6VG9mWLK0il.png"
+                class="h-10 w-10 object-contain" alt="Logo">
+            <div class="logo-text">
+                <span class="font-extrabold text-lg block text-white">1000 PIPS</span>
+                <span class="text-[10px] uppercase text-primary font-bold">Climber System</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav flex-1 space-y-2">
+            <a href="dashboard.html" class="sidebar-link">
+                <i class="fas fa-chart-line"></i> <span class="link-text">Overview</span>
+            </a>
+            <a href="invest.html" class="sidebar-link">
+                <i class="fas fa-rocket"></i> <span class="link-text">Invest Now</span>
+            </a>
+            <a href="deposit.html" class="sidebar-link">
+                <i class="fas fa-wallet"></i> <span class="link-text">Deposit</span>
+            </a>
+            <a href="withdraw.html" class="sidebar-link active">
+                <i class="fas fa-money-bill-transfer"></i> <span class="link-text">Withdraw</span>
+            </a>
+            <a href="profile.html" class="sidebar-link">
+                <i class="fas fa-user-cog"></i> <span class="link-text">Settings</span>
+            </a>
+        </nav>
+
+        <div class="mt-auto profile-details pt-8 border-t border-white/5">
+            <button onclick="logout()"
+                class="w-full flex items-center justify-center gap-3 p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all text-sm font-bold border border-red-500/10">
+                <i class="fas fa-power-off"></i> <span class="link-text">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">Withdraw Capital</h1>
+            <p class="text-gray-400 font-medium">Extract your earnings via high-priority blockchain transfers.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div class="glass-card">
+                <h3 class="text-xl font-extrabold text-white mb-8">Outbound Setup</h3>
+
+                <div class="space-y-6">
+                    <div class="p-6 bg-white/5 border border-white/10 rounded-2xl flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Withdrawable
+                                Balance</p>
+                            <p class="text-3xl font-black text-white"
+                                x-text="`$${balance.toLocaleString(undefined, {minimumFractionDigits: 2})}`"></p>
+                        </div>
+                        <div class="p-3 bg-primary/10 rounded-xl text-primary border border-primary/20">
+                            <i class="fas fa-vault text-xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest">Withdrawal
+                                Protocol</label>
+                            <select x-model="method"
+                                class="input-group bg-gray-900 border border-white/10 text-white font-bold outline-none cursor-pointer">
+                                <option value="BTC">Bitcoin (BTC)</option>
+                                <option value="ETH">Ethereum (ERC20)</option>
+                                <option value="USDT">USDT (TRC20)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest">Amount to
+                                Withdraw ($)</label>
+                            <div class="relative">
+                                <input type="number" x-model="amount" class="input-group text-xl font-black"
+                                    placeholder="0.00">
+                                <button @click="amount = balance"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-primary hover:text-white transition-colors">MAX</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest">Destination
+                                Wallet Address</label>
+                            <input type="text" x-model="wallet" class="input-group text-sm font-mono"
+                                placeholder="Enter receive address">
+                        </div>
+                    </div>
+
+                    <button @click="submitWithdrawal"
+                        class="btn-primary w-full py-5 text-xl bg-red-600 hover:bg-red-700 shadow-red-500/10">
+                        Request Payout
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="glass-card !bg-primary/5 border-primary/20">
+                    <h4 class="text-lg font-black text-white mb-4">Transfer Security</h4>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-6">
+                        All withdrawals are secured with multi-signature verification and typical processing time is
+                        1-12 hours depending on network congestion.
+                    </p>
+                    <div class="flex items-center gap-3 text-[10px] font-black text-primary uppercase tracking-widest">
+                        <i class="fas fa-shield-halved"></i> 256-bit Encryption Active
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h4 class="text-md font-black text-white mb-4 uppercase tracking-widest text-xs">Recent History</h4>
+                    <div class="space-y-4">
+                        <div class="text-center py-10">
+                            <i class="fas fa-clock-rotate-left text-gray-700 text-3xl mb-3 block"></i>
+                            <p class="text-xs text-gray-600 font-bold italic">No pending requests found.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/auth.js"></script>
+    <script>
+        checkAuth();
+    </script>
+</body>
+
+</html>

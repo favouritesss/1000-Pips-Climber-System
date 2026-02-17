@@ -4,576 +4,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1000 Pips Climber System - Dashboard</title>
-
-    <!-- Scripts & Styles -->
+    <title>Dashboard | 1000 Pips Climber System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3B82F6',
-                        secondary: '#10B981',
-                        accent: '#6366F1',
-                        dark: '#0F172A'
-                    }
-                }
-            }
-        }
-    </script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
-        :root {
-            --primary: #3B82F6;
-            --primary-glow: rgba(59, 130, 246, 0.5);
-            --secondary: #10B981;
-            --secondary-glow: rgba(16, 185, 129, 0.5);
-            --accent: #6366F1;
-            --dark-bg: #0F172A;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--dark-bg);
-            background-image:
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
-        }
-
-        [x-cloak] {
-            display: none !important;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-
-        .glass-hover:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            transform: translateY(-4px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar-link {
-            transition: all 0.2s ease-in-out;
-        }
-
-        .sidebar-link:hover {
-            background: rgba(59, 130, 246, 0.1);
-            color: white;
-            padding-left: 1.5rem;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-            transform: translateX(-100%);
-            transition: 0.5s;
-        }
-
-        .stat-card:hover::after {
-            transform: translateX(100%);
-        }
-
-        .animate-in {
-            animation: fadeIn 0.8s ease-out forwards;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-    </style>
 </head>
 
-<body class="text-gray-100 antialiased custom-scrollbar">
-    <div class="min-h-screen flex flex-col md:flex-row">
-        <!-- Sidebar -->
-        <aside
-            class="w-full md:w-72 bg-gray-900/50 backdrop-blur-xl border-r border-gray-800/50 p-8 flex flex-col z-40">
-            <div class="flex items-center gap-4 mb-12">
-                <div class="p-2 bg-primary/20 rounded-2xl border border-primary/30">
-                    <img src="storage/app/public/photos/1chTY0mNnf6udZ3nuhSrZn38Ch1mh6VG9mWLK0il.png"
-                        class="h-8 w-8 object-contain" alt="Logo">
-                </div>
-                <div>
-                    <span class="font-extrabold text-xl tracking-tight text-white block">1000 PIPS</span>
-                    <span class="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Climber System</span>
-                </div>
-            </div>
-
-            <nav class="flex-1 space-y-3">
-                <a href="#"
-                    class="flex items-center gap-4 p-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 font-semibold shadow-lg shadow-primary/5">
-                    <i class="fas fa-grid-2 w-5"></i> Dashboard
-                </a>
-                <a href="#" @click="$dispatch('open-invest-modal')"
-                    class="sidebar-link flex items-center gap-4 p-4 rounded-2xl text-gray-400 font-medium group">
-                    <i class="fas fa-rocket w-5 group-hover:text-primary"></i> Invest
-                </a>
-                <a href="#" @click="$dispatch('open-deposit-modal')"
-                    class="sidebar-link flex items-center gap-4 p-4 rounded-2xl text-gray-400 font-medium group">
-                    <i class="fas fa-wallet w-5 group-hover:text-primary"></i> Deposit
-                </a>
-                <a href="#" @click="$dispatch('open-withdraw-modal')"
-                    class="sidebar-link flex items-center gap-4 p-4 rounded-2xl text-gray-400 font-medium group">
-                    <i class="fas fa-arrow-up-right-from-square w-5 group-hover:text-primary"></i> Withdraw
-                </a>
-                <a href="/profile.html"
-                    class="sidebar-link flex items-center gap-4 p-4 rounded-2xl text-gray-400 font-medium group">
-                    <i class="fas fa-user-gear w-5 group-hover:text-primary"></i> Profile
-                </a>
-            </nav>
-
-            <div class="mt-auto pt-8 border-t border-gray-800/50">
-                <div class="glass p-5 rounded-2xl mb-6">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-lg">
-                            <i class="fas fa-user-shield"></i>
-                        </div>
-                        <div>
-                            <p id="username" class="text-sm font-bold text-white truncate max-w-[120px]">Loading...</p>
-                            <span
-                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/20">
-                                Verified Pro
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="logout()"
-                    class="w-full flex items-center justify-center gap-3 p-4 rounded-2xl bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white transition-all text-sm font-bold border border-red-500/10">
-                    <i class="fas fa-power-off"></i> Logout Account
-                </button>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 p-8 md:p-12 overflow-y-auto custom-scrollbar animate-in">
-            <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                <div>
-                    <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">Financial Overview</h1>
-                    <p class="text-gray-400 font-medium">Welcome back, your portfolio is performing <span
-                            class="text-green-400">+4.2%</span> better today.</p>
-                </div>
-                <div class="flex items-center gap-4 h-full">
-                    <div
-                        class="hidden lg:flex items-center gap-2 px-4 py-2 bg-gray-900/50 rounded-xl border border-gray-800">
-                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span class="text-xs font-bold text-gray-400">Market Open</span>
-                    </div>
-                    <button @click="$dispatch('open-deposit-modal')"
-                        class="px-8 py-4 bg-primary hover:bg-blue-600 text-white rounded-2xl font-bold shadow-xl shadow-primary/20 transition-all transform hover:-translate-y-1">
-                        <i class="fas fa-circle-plus mr-2"></i> Add Liquidity
-                    </button>
-                </div>
-            </header>
-
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                <div class="glass stat-card p-8 rounded-[2rem] relative overflow-hidden group">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="p-3 bg-primary/10 rounded-2xl text-primary border border-primary/20">
-                            <i class="fas fa-vault text-xl"></i>
-                        </div>
-                        <span
-                            class="text-xs font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded-lg">+12.5%</span>
-                    </div>
-                    <p class="text-gray-400 text-sm font-semibold mb-1 uppercase tracking-wider">Available Balance</p>
-                    <h2 id="balance" class="text-4xl font-extrabold text-white tracking-tight">$0.00</h2>
-                </div>
-                <div class="glass stat-card p-8 rounded-[2rem] relative overflow-hidden group">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="p-3 bg-secondary/10 rounded-2xl text-secondary border border-secondary/20">
-                            <i class="fas fa-chart-line-up text-xl"></i>
-                        </div>
-                        <span
-                            class="text-xs font-bold text-blue-400 bg-blue-400/10 px-2 py-1 rounded-lg">Realtime</span>
-                    </div>
-                    <p class="text-gray-400 text-sm font-semibold mb-1 uppercase tracking-wider">Total Earnings</p>
-                    <h2 id="earnings" class="text-4xl font-extrabold text-white tracking-tight">$0.00</h2>
-                </div>
-                <div class="glass stat-card p-8 rounded-[2rem] relative overflow-hidden group">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="p-3 bg-accent/10 rounded-2xl text-accent border border-accent/20">
-                            <i class="fas fa-users-medical text-xl"></i>
-                        </div>
-                        <span class="text-xs font-bold text-accent bg-accent/10 px-2 py-1 rounded-lg">Passive</span>
-                    </div>
-                    <p class="text-gray-400 text-sm font-semibold mb-1 uppercase tracking-wider">Partner Bonus</p>
-                    <h2 id="bonus" class="text-4xl font-extrabold text-white tracking-tight">$0.00</h2>
-                </div>
-            </div>
-
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-                <div class="lg:col-span-2 glass p-8 rounded-[2rem]">
-                    <div class="flex justify-between items-center mb-8">
-                        <div>
-                            <h3 class="text-xl font-extrabold text-white">Profit Analytics</h3>
-                            <p class="text-sm text-gray-500 font-medium">Growth performance over last 7 days</p>
-                        </div>
-                        <select
-                            class="bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-2 text-xs font-bold outline-none">
-                            <option>Last 7 Days</option>
-                            <option>Last 30 Days</option>
-                        </select>
-                    </div>
-                    <canvas id="profitChart" height="150"></canvas>
-                </div>
-                <div class="glass p-8 rounded-[2rem] flex flex-col">
-                    <h3 class="text-xl font-extrabold text-white mb-2">Market Sentiment</h3>
-                    <p class="text-sm text-gray-500 font-medium mb-8">Current trading trends</p>
-
-                    <div class="flex-1 space-y-6">
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold mb-1">
-                                <span class="text-gray-400 uppercase">BTC Growth</span>
-                                <span class="text-white">82%</span>
-                            </div>
-                            <div class="w-full bg-gray-800 rounded-full h-2">
-                                <div class="bg-primary h-2 rounded-full" style="width: 82%"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold mb-1">
-                                <span class="text-gray-400 uppercase">ETH Volatility</span>
-                                <span class="text-white">45%</span>
-                            </div>
-                            <div class="w-full bg-gray-800 rounded-full h-2">
-                                <div class="bg-accent h-2 rounded-full" style="width: 45%"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold mb-1">
-                                <span class="text-gray-400 uppercase">Stable Performance</span>
-                                <span class="text-white">94%</span>
-                            </div>
-                            <div class="w-full bg-gray-800 rounded-full h-2">
-                                <div class="bg-secondary h-2 rounded-full" style="width: 94%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-8 p-4 bg-primary/10 border border-primary/20 rounded-2xl">
-                        <p class="text-xs font-bold text-primary mb-1 italic">Expert Tip:</p>
-                        <p class="text-[11px] text-gray-400 leading-relaxed font-medium">Markets are currently showing
-                            strong bullish divergence. Consider increasing your Starter plan stake.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-12">
-                <!-- Active Investments -->
-                <section>
-                    <div class="flex justify-between items-center mb-8">
-                        <div>
-                            <h3 class="text-2xl font-extrabold text-white">Active Growth Plans</h3>
-                            <p class="text-sm text-gray-500 font-medium">Your current revenue generating contracts</p>
-                        </div>
-                        <button @click="$dispatch('open-invest-modal')"
-                            class="p-3 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xl transition-all border border-primary/20">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                    <div id="investmentsList" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                        <!-- Investments will be injected here -->
-                    </div>
-                </section>
-
-                <!-- Recent Transactions -->
-                <section>
-                    <div class="flex justify-between items-center mb-8">
-                        <div>
-                            <h3 class="text-2xl font-extrabold text-white text-white">Activity Ledger</h3>
-                            <p class="text-sm text-gray-500 font-medium">Official record of all fund movements</p>
-                        </div>
-                    </div>
-                    <div class="glass rounded-[2rem] overflow-hidden border border-gray-800/50">
-                        <table class="w-full text-left">
-                            <thead>
-                                <tr class="bg-white/5 border-b border-gray-800/50">
-                                    <th
-                                        class="px-6 py-5 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-                                        Date</th>
-                                    <th
-                                        class="px-6 py-5 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-                                        Category</th>
-                                    <th
-                                        class="px-6 py-5 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-                                        Volume</th>
-                                    <th
-                                        class="px-6 py-5 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest text-center">
-                                        Protocol Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactionsList">
-                                <!-- Transactions will be injected here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-            </div>
-        </main>
-    </div>
-
-    <!-- Modals -->
-    <div x-data="{ 
-        investModal: false, 
-        depositModal: false, 
-        withdrawModal: false,
-        notification: { show: false, message: '', type: 'success' },
-        plans: [],
-        selectedPlan: null,
-        investAmount: '',
-        depositAmount: '',
-        depositMethod: 'BTC',
-        withdrawAmount: '',
-        withdrawMethod: 'BTC',
-        wallet: '',
-        showNotify(msg, type = 'success') {
-            this.notification = { show: true, message: msg, type };
-            setTimeout(() => this.notification.show = false, 5000);
-        },
-        async init() {
-            const res = await fetch('/api/invest/plans');
-            this.plans = await res.json();
-            if(this.plans.length) this.selectedPlan = this.plans[0].id;
-        }
-    }" @open-invest-modal.window="investModal = true" @open-deposit-modal.window="depositModal = true"
-        @open-withdraw-modal.window="withdrawModal = true" class="relative">
-
-        <!-- Global Notifications -->
-        <div x-show="notification.show" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0"
-            x-transition:leave-end="opacity-0 translate-y-4" class="fixed bottom-8 right-8 z-[100] max-w-sm w-full"
-            x-cloak>
-            <div :class="notification.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-500'"
-                class="glass p-5 rounded-2xl flex items-center gap-4 border" style="background: rgba(15, 23, 42, 0.9);">
-                <div :class="notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'"
-                    class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <i
-                        :class="notification.type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="text-xs font-extrabold uppercase tracking-widest opacity-60"
-                        x-text="notification.type === 'success' ? 'Success Confirmation' : 'System Error'"></p>
-                    <p class="text-sm font-bold text-white mt-1" x-text="notification.message"></p>
-                </div>
-                <button @click="notification.show = false" class="text-gray-500 hover:text-white transition-colors">
-                    <i class="fas fa-times"></i>
-                </button>
+<body x-data="{ mobileMenu: false }">
+    <!-- Sidebar Placeholder -->
+    <aside class="sidebar flex flex-col p-6 overflow-y-auto custom-scrollbar"
+        :class="mobileMenu ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+        <div class="flex items-center gap-4 mb-10 px-2 lg:px-4">
+            <img src="storage/app/public/photos/1chTY0mNnf6udZ3nuhSrZn38Ch1mh6VG9mWLK0il.png"
+                class="h-10 w-10 object-contain" alt="Logo">
+            <div class="logo-text">
+                <span class="font-extrabold text-lg block text-white">1000 PIPS</span>
+                <span class="text-[10px] uppercase text-primary font-bold">Climber System</span>
             </div>
         </div>
 
-        <!-- Invest Modal -->
-        <div x-show="investModal" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 backdrop-blur-0" x-transition:enter-end="opacity-100 backdrop-blur-sm"
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" x-cloak>
-            <div @click.away="investModal = false"
-                class="glass bg-[#0F172A]/90 border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden">
-                <div class="absolute -right-20 -top-20 w-64 h-64 bg-primary/20 rounded-full blur-[80px]"></div>
+        <nav class="sidebar-nav flex-1 space-y-2">
+            <a href="dashboard.html" class="sidebar-link active">
+                <i class="fas fa-chart-line"></i> <span class="link-text">Overview</span>
+            </a>
+            <a href="invest.html" class="sidebar-link">
+                <i class="fas fa-rocket"></i> <span class="link-text">Invest Now</span>
+            </a>
+            <a href="deposit.html" class="sidebar-link">
+                <i class="fas fa-wallet"></i> <span class="link-text">Deposit</span>
+            </a>
+            <a href="withdraw.html" class="sidebar-link">
+                <i class="fas fa-money-bill-transfer"></i> <span class="link-text">Withdraw</span>
+            </a>
+            <a href="profile.html" class="sidebar-link">
+                <i class="fas fa-user-cog"></i> <span class="link-text">Settings</span>
+            </a>
+        </nav>
 
-                <h3 class="text-3xl font-extrabold text-white mb-2 relative z-10">Smart Allocation</h3>
-                <p class="text-gray-400 font-medium mb-8 relative z-10">Deploy your capital into high-yield growth
-                    protocols.</p>
+        <div class="mt-auto profile-details pt-8 border-t border-white/5">
+            <div class="glass p-4 rounded-2xl mb-4 text-center lg:text-left">
+                <p id="username" class="text-sm font-bold text-white truncate">Loading...</p>
+                <span class="text-[10px] text-green-400 font-bold uppercase tracking-widest">Verified Trader</span>
+            </div>
+            <button onclick="logout()"
+                class="w-full flex items-center justify-center gap-3 p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all text-sm font-bold border border-red-500/10">
+                <i class="fas fa-power-off"></i> <span class="link-text">Logout</span>
+            </button>
+        </div>
+    </aside>
 
-                <div class="space-y-6 relative z-10">
-                    <div class="space-y-2">
-                        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-widest">Growth
-                            Plan</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <template x-for="plan in plans" :key="plan.id">
-                                <button @click="selectedPlan = plan.id"
-                                    :class="selectedPlan === plan.id ? 'border-primary bg-primary/10 text-primary shadow-lg shadow-primary/5' : 'border-gray-800 bg-gray-900/50 text-gray-500 hover:border-gray-700'"
-                                    class="p-4 rounded-2xl border transition-all text-left">
-                                    <p class="text-xs font-bold uppercase" x-text="plan.name"></p>
-                                    <p class="text-lg font-black mt-1" x-text="`${plan.roi_percentage}%`"></p>
-                                    <p class="text-[10px] opacity-60 mt-1" x-text="`${plan.duration_days} Days Term`">
-                                    </p>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <label
-                            class="block text-xs font-extrabold text-gray-500 uppercase tracking-widest text-gray-500 uppercase tracking-widest">Entry
-                            Volume ($)</label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                                <i
-                                    class="fas fa-dollar-sign text-gray-500 group-focus-within:text-primary transition-colors"></i>
-                            </div>
-                            <input type="number" x-model="investAmount"
-                                class="w-full bg-gray-900/80 border border-gray-800 rounded-2xl pl-12 pr-6 py-5 text-white font-bold text-xl outline-none focus:border-primary transition-all shadow-inner"
-                                placeholder="0.00">
-                        </div>
-                        <div class="flex justify-between text-[10px] font-bold text-gray-500 pt-1">
-                            <span>MINIMUM: $100</span>
-                            <span class="text-primary hover:underline cursor-pointer">USE MAX BALANCE</span>
-                        </div>
-                    </div>
-                    <div class="pt-4">
-                        <button
-                            @click="handleInvestment(selectedPlan, investAmount).then(() => { investModal = false; showNotify('Growth plan successfully activated!', 'success'); }).catch(e => showNotify(e.message, 'error'))"
-                            class="w-full py-5 bg-primary hover:bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 transition-all transform hover:-translate-y-1">
-                            Start Growth Protocol
-                        </button>
+    <main class="main-content">
+        <!-- Desktop Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+            <div>
+                <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-2 tracking-tight">Welcome, <span
+                        id="welcomeName" class="text-primary">Trader</span>!</h1>
+                <p class="text-gray-400 font-medium">Here's your real-time portfolio performance overview.</p>
+            </div>
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <a href="deposit.html"
+                    class="btn-primary w-full md:w-auto text-center flex items-center justify-center gap-2">
+                    <i class="fas fa-plus"></i> Add Funds
+                </a>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-12">
+            <div class="glass-card flex flex-col justify-between group">
+                <div class="flex justify-between items-start mb-6">
+                    <div class="p-3 bg-primary/10 rounded-2xl text-primary border border-primary/20">
+                        <i class="fas fa-vault text-xl"></i>
                     </div>
                 </div>
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Available Balance</p>
+                <h2 id="balance" class="text-3xl lg:text-4xl font-black text-white">$0.00</h2>
+            </div>
+            <div class="glass-card flex flex-col justify-between group">
+                <div class="flex justify-between items-start mb-6">
+                    <div class="p-3 bg-secondary/10 rounded-2xl text-secondary border border-secondary/20">
+                        <i class="fas fa-chart-line text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Total Profits</p>
+                <h2 id="earnings" class="text-3xl lg:text-4xl font-black text-white">$0.00</h2>
+            </div>
+            <div class="glass-card flex flex-col justify-between group">
+                <div class="flex justify-between items-start mb-6">
+                    <div class="p-3 bg-accent/10 rounded-2xl text-accent border border-accent/20">
+                        <i class="fas fa-users-viewfinder text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Partner Bonus</p>
+                <h2 id="bonus" class="text-3xl lg:text-4xl font-black text-white">$0.00</h2>
             </div>
         </div>
 
-        <!-- Deposit Modal -->
-        <div x-show="depositModal" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" x-cloak>
-            <div @click.away="depositModal = false"
-                class="glass bg-[#0F172A]/90 border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden">
-                <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-secondary/10 rounded-full blur-[80px]"></div>
-
-                <h3 class="text-3xl font-extrabold text-white mb-2 relative z-10">Add Capital</h3>
-                <p class="text-gray-400 font-medium mb-8 relative z-10">Fund your account using our secure multi-chain
-                    protocol.</p>
-
-                <div class="space-y-6 relative z-10">
-                    <div class="space-y-2">
-                        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-widest">Network
-                            Protocol</label>
-                        <div class="grid grid-cols-3 gap-3">
-                            <button @click="depositMethod = 'BTC'"
-                                :class="depositMethod === 'BTC' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-800 bg-gray-900/50 text-gray-500'"
-                                class="p-4 rounded-xl border transition-all flex flex-col items-center gap-2">
-                                <i class="fab fa-bitcoin text-xl"></i>
-                                <span class="text-[10px] font-bold">BTC</span>
-                            </button>
-                            <button @click="depositMethod = 'ETH'"
-                                :class="depositMethod === 'ETH' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-800 bg-gray-900/50 text-gray-500'"
-                                class="p-4 rounded-xl border transition-all flex flex-col items-center gap-2">
-                                <i class="fab fa-ethereum text-xl"></i>
-                                <span class="text-[10px] font-bold">ETH</span>
-                            </button>
-                            <button @click="depositMethod = 'USDT'"
-                                :class="depositMethod === 'USDT' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-800 bg-gray-900/50 text-gray-500'"
-                                class="p-4 rounded-xl border transition-all flex flex-col items-center gap-2">
-                                <i class="fas fa-circle-dollar text-xl"></i>
-                                <span class="text-[10px] font-bold">USDT</span>
-                            </button>
-                        </div>
-                    </div>
+        <!-- Profit Analytics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div class="lg:col-span-2 glass-card">
+                <div
+                    class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 text-center sm:text-left">
                     <div>
-                        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-widest mb-2">Deposit
-                            Volume ($)</label>
-                        <input type="number" x-model="depositAmount"
-                            class="w-full bg-gray-900/80 border border-gray-800 rounded-2xl px-6 py-5 text-white font-bold text-xl outline-none focus:border-primary transition-all"
-                            placeholder="0.00">
+                        <h3 class="text-xl font-extrabold text-white">Profit Curve</h3>
+                        <p class="text-sm text-gray-500 font-medium">Growth performance analysis</p>
                     </div>
-                    <div class="p-6 bg-blue-500/5 border border-white/5 rounded-2xl relative">
-                        <p class="text-[10px] text-primary uppercase font-extrabold mb-3 flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
-                            Generated Deposit Address:
-                        </p>
-                        <div class="flex items-center gap-4">
-                            <p class="text-sm text-white break-all font-mono font-medium opacity-80">
-                                bc1qxy2kgqx04690z7gm49fv6fdc40uqvxru7xha5p</p>
-                            <button class="p-2 text-gray-500 hover:text-primary transition-colors"><i
-                                    class="fas fa-copy"></i></button>
+                    <div class="inline-flex glass p-1 rounded-xl">
+                        <button class="px-4 py-1.5 text-xs font-bold bg-primary text-white rounded-lg">LIVE</button>
+                    </div>
+                </div>
+                <div class="h-[300px]">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+            <div class="glass-card flex flex-col">
+                <h3 class="text-xl font-extrabold text-white mb-6">Market Insight</h3>
+                <div class="space-y-6 flex-1">
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="text-gray-400 uppercase tracking-widest">BTC Sentiment</span>
+                            <span class="text-primary">82% Bullish</span>
+                        </div>
+                        <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-primary h-full rounded-full" style="width: 82%"></div>
                         </div>
                     </div>
-                    <button
-                        @click="handleDeposit(depositAmount, depositMethod).then(() => { depositModal = false; showNotify('Deposit request submitted for verification', 'success'); })"
-                        class="w-full py-5 bg-secondary hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all shadow-xl shadow-secondary/10">
-                        Confirm Transfer
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Withdraw Modal -->
-        <div x-show="withdrawModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" x-cloak>
-            <div @click.away="withdrawModal = false"
-                class="glass bg-[#0F172A]/90 border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl relative overflow-hidden">
-                <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-red-500/10 rounded-full blur-[80px]"></div>
-
-                <h3 class="text-3xl font-extrabold text-white mb-2 relative z-10">Asset Liquidation</h3>
-                <p class="text-gray-400 font-medium mb-8 relative z-10">Transfer your earnings to your external secure
-                    wallet.</p>
-
-                <div class="space-y-6 relative z-10">
-                    <div>
-                        <label
-                            class="block text-xs font-extrabold text-gray-500 uppercase tracking-widest mb-2">Withdrawal
-                            Volume ($)</label>
-                        <input type="number" x-model="withdrawAmount"
-                            class="w-full bg-gray-900/80 border border-gray-800 rounded-2xl px-6 py-5 text-white font-bold text-xl outline-none focus:border-danger transition-all"
-                            placeholder="0.00">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-widest mb-2">Target
-                            Wallet (Destination)</label>
-                        <input type="text" x-model="wallet"
-                            class="w-full bg-gray-900/80 border border-gray-800 rounded-2xl px-6 py-4 text-white font-medium text-sm outline-none focus:border-danger transition-all"
-                            placeholder="Enter receive address">
-                    </div>
                     <div class="space-y-2">
-                        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-widest">Withdrawal
-                            Protocol</label>
-                        <select x-model="withdrawMethod"
-                            class="w-full bg-gray-900/80 border border-gray-800 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-danger appearance-none">
-                            <option value="BTC">Bitcoin (BTC Chain)</option>
-                            <option value="ETH">Ethereum (ERC20)</option>
-                            <option value="USDT">USDT (TRC20)</option>
-                        </select>
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="text-gray-400 uppercase tracking-widest">Growth Trend</span>
+                            <span class="text-secondary">Accelerating</span>
+                        </div>
+                        <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-secondary h-full rounded-full" style="width: 94%"></div>
+                        </div>
                     </div>
-                    <button
-                        @click="handleWithdrawal(withdrawAmount, withdrawMethod, wallet).then(() => { withdrawModal = false; showNotify('Withdrawal request is in queue for approval', 'success'); })"
-                        class="w-full py-5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all shadow-xl shadow-red-500/10">
-                        Initiate Outbound Transfer
-                    </button>
-                    <p class="text-center text-[10px] font-bold text-gray-600 uppercase tracking-widest">Withdrawals are
-                        processed within 24 hours</p>
+                </div>
+                <div class="mt-10 p-5 bg-primary/5 border border-primary/10 rounded-2xl">
+                    <p class="text-[11px] text-gray-400 leading-relaxed italic">
+                        <span class="text-primary font-bold not-italic">HINT:</span> High accumulation detected in BTC.
+                        Strategic re-allocation to the "Diamond Protocol" is recommended for maximised yield.
+                    </p>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Tables section -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-10">
+            <section>
+                <div class="flex items-center justify-between mb-8 px-2">
+                    <div>
+                        <h3 class="text-2xl font-extrabold text-white">Active Plans</h3>
+                        <p class="text-sm text-gray-500 font-medium">Your running contracts</p>
+                    </div>
+                </div>
+                <div id="investmentsList" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                    <!-- Dynamic -->
+                </div>
+            </section>
+
+            <section>
+                <div class="flex items-center justify-between mb-8 px-2">
+                    <div>
+                        <h3 class="text-2xl font-extrabold text-white">Recent Activity</h3>
+                        <p class="text-sm text-gray-500 font-medium">Blockchain ledger verification</p>
+                    </div>
+                </div>
+                <div class="glass-card !p-0 overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/5">
+                                <th class="p-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Date</th>
+                                <th class="p-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Type</th>
+                                <th class="p-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Amount
+                                </th>
+                                <th
+                                    class="p-6 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">
+                                    Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsList">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
 
     <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
-    <script>
-        checkAuth();
-    </script>
 </body>
 
 </html>

@@ -18,6 +18,10 @@ async function fetchDashboardData() {
         document.getElementById('earnings').innerText = `$${user.earnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
         document.getElementById('bonus').innerText = `$${user.referral_bonus.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
         document.getElementById('username').innerText = user.username;
+        const welcomeNameElement = document.getElementById('welcomeName');
+        if (welcomeNameElement) {
+            welcomeNameElement.innerText = user.fullname || user.username;
+        }
 
         const invRes = await fetch(`${API_URL}/invest/investments`, {
             headers: { 'Authorization': `Bearer ${token}` }

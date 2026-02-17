@@ -4,7 +4,7 @@ let allUsers = [];
 async function fetchAdminData() {
     const token = localStorage.getItem('token');
     if (!token) {
-        window.location.href = '/login.html';
+        window.location.href = '/admin-login.html';
         return;
     }
 
@@ -17,7 +17,7 @@ async function fetchAdminData() {
 
         if (user.role !== 'admin') {
             alert('Access denied. This area is reserved for administrators.');
-            window.location.href = '/dashboard.html';
+            window.location.href = '/admin-login.html';
             return;
         }
 

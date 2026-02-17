@@ -5,6 +5,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - 1000 Pips Climber System</title>
+
+    <!-- BLOCKING AUTH CHECK: Prevents page flashing for unauthorized users -->
+    <script>
+        (function () {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!token || user.role !== 'admin') {
+                window.location.replace('/admin-login.html');
+                // Create a temporary style to keep the page white/blank while redirecting
+                document.documentElement.style.display = 'none';
+            }
+        })();
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -19,7 +33,7 @@
             }
         }
     </script>
-    <link rel="stylesheet" href="vendor/cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body class="bg-dark text-gray-100 font-sans antialiased">

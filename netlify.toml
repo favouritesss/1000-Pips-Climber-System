@@ -2,7 +2,18 @@
   publish = "backend/public"
 
 [[redirects]]
-  from = "/api/*"
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
   to = "https://one000-pips-climber-system.onrender.com/api/:splat"
   status = 200
   force = true
+  conditions = {Path = ["/api/*"]}
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

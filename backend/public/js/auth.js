@@ -12,7 +12,7 @@ async function login(email, password) {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             if (data.user.role === 'admin') {
-                window.location.href = '/admin.html';
+                window.location.href = '/admin';
             } else {
                 window.location.href = '/dashboard.html';
             }

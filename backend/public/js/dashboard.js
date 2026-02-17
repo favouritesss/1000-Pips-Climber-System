@@ -38,7 +38,7 @@ async function fetchDashboardData() {
 
         const welcomeNameElement = document.getElementById('welcomeName');
         if (welcomeNameElement) {
-            welcomeNameElement.innerText = user.fullname || user.username;
+            welcomeNameElement.innerText = (user.fullname && user.fullname.trim() !== "") ? user.fullname : user.username;
         }
 
         const invRes = await fetch(`${API_URL}/invest/investments`, {

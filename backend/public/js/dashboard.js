@@ -116,11 +116,33 @@ function startLiveUpdates() {
 }
 
 function initProfitChart(transactions) {
-    const ctx = document.getElementById('profitChart').getContext('2d');
+    const canvas = document.getElementById('profitChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
 
-    // Simple profit simulation based on transactions or static for demo
-    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const data = [120, 190, 300, 500, 200, 300, 450]; // Mock data for trend
+    // Generate accurate data from transactions or simulate attractive growth
+    let labels = [];
+    let dataPoints = [];
+
+    if (transactions && transactions.length > 2) {
+        // Build chart from actual history
+        const sorted = transactions.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        let runningBalance = 0;
+
+        // Take last 7 data points or all if less
+        const recent = sorted.slice(-10);
+
+        recent.forEach(tx => {
+            labels.push(new Date(tx.created_at).toLocaleDateString(undefined, { weekday: 'short' }));
+            if (tx.type === 'deposit' || tx.type === 'roi' || tx.type === 'bonus') runningBalance += tx.amount;
+            if (tx.type === 'withdrawal') runningBalance -= tx.amount;
+            dataPoints.push(runningBalance);
+        });
+    } else {
+        // Cold start simulation (Attractive "Invest Now" curve)
+        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        dataPoints = [0, 120, 350, 480, 800, 1200, 1850];
+    }
 
     if (profitChart) profitChart.destroy();
 
@@ -129,14 +151,15 @@ function initProfitChart(transactions) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Earnings Growth',
-                data: data,
+                label: 'Portfolio Value',
+                data: dataPoints,
                 borderColor: '#3B82F6',
-                borderWidth: 4,
+                borderWidth: 3,
                 pointBackgroundColor: '#3B82F6',
-                pointBorderColor: 'rgba(255,255,255,0.5)',
-                pointRadius: 6,
-                pointHoverRadius: 8,
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
                 tension: 0.4,
                 fill: true,
                 backgroundColor: (context) => {
@@ -145,7 +168,7 @@ function initProfitChart(transactions) {
                     if (!chartArea) return null;
                     const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
                     gradient.addColorStop(0, 'rgba(59, 130, 246, 0)');
-                    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
+                    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.25)'); // More transparent
                     return gradient;
                 }
             }]
@@ -153,27 +176,33 @@ function initProfitChart(transactions) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#1E293B',
-                    titleFont: { size: 14, weight: 'bold' },
-                    bodyFont: { size: 13 },
-                    padding: 12,
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    padding: 10,
                     displayColors: false,
                     callbacks: {
-                        label: (val) => `$${val.raw.toFixed(2)}`
+                        label: (context) => `Value: $${context.raw.toFixed(2)}`
                     }
                 }
             },
             scales: {
                 x: {
                     grid: { display: false },
-                    ticks: { color: '#64748B', font: { weight: 'bold' } }
+                    ticks: { color: '#64748B', font: { size: 10, weight: 'bold' } }
                 },
                 y: {
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    ticks: { color: '#64748B', font: { weight: 'bold' } }
+                    grid: { color: 'rgba(255,255,255,0.03)' },
+                    ticks: { color: '#64748B', font: { size: 10, weight: 'bold' }, callback: (value) => '$' + value }
                 }
             }
         }

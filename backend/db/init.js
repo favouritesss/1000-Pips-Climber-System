@@ -2,13 +2,21 @@ const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
 const path = require('path');
 
+let dbInstance = null;
+
 async function initDb() {
-    const db = await open({
+    if (dbInstance) return dbInstance;
+
+    dbInstance = await open({
         filename: path.join(__dirname, 'database.sqlite'),
         driver: sqlite3.Database
     });
 
-    await db.exec(`
+    await dbInstance.exec('PRAGMA journal_mode = WAL;');
+
+
+
+    await dbInstance.exec(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
@@ -61,24 +69,24 @@ async function initDb() {
     `);
 
     // Add some default plans
-    const plansCount = await db.get('SELECT COUNT(*) as count FROM plans');
+    const plansCount = await dbInstance.get('SELECT COUNT(*) as count FROM plans');
     if (plansCount.count === 0) {
-        await db.run('INSERT INTO plans (name, min_deposit, max_deposit, roi_percentage, duration_days) VALUES (?, ?, ?, ?, ?)', ['Starter', 100, 1000, 10, 7]);
-        await db.run('INSERT INTO plans (name, min_deposit, max_deposit, roi_percentage, duration_days) VALUES (?, ?, ?, ?, ?)', ['Silver', 1001, 5000, 20, 14]);
-        await db.run('INSERT INTO plans (name, min_deposit, max_deposit, roi_percentage, duration_days) VALUES (?, ?, ?, ?, ?)', ['Gold', 5001, 20000, 35, 30]);
-        await db.run('INSERT INTO plans (name, min_deposit, max_deposit, roi_percentage, duration_days) VALUES (?, ?, ?, ?, ?)', ['Diamond', 20001, 100000, 50, 60]);
+        await dbInstance.run('INSERT INTO plans (name, min_deposit, max_deposit, roi_percentage, duration_days) VALUES (?, ?, ?, ?, ?)', ['Starter', 100, 1000, 10, 7]);
+        await dbInstance.run('INSERT INTO plans (name, min_deposit, max_deposit, roi_percentage, duration_days) VALUES (?, ?, ?, ?, ?)', ['Silver', 1001, 5000, 20, 14]);
+        await dbInstance.run('INSERT INTO plans (name, min_deposit, max_deposit, roi_percentage, duration_days) VALUES (?, ?, ?, ?, ?)', ['Gold', 5001, 20000, 35, 30]);
+        await dbInstance.run('INSERT INTO plans (name, min_deposit, max_deposit, roi_percentage, duration_days) VALUES (?, ?, ?, ?, ?)', ['Diamond', 20001, 100000, 50, 60]);
     }
 
     // Add admin user if not exists
-    const admin = await db.get('SELECT * FROM users WHERE role = "admin"');
+    const admin = await dbInstance.get('SELECT * FROM users WHERE role = "admin"');
     if (!admin) {
         const bcrypt = require('bcryptjs');
         const hashedPassword = await bcrypt.hash('admin123', 10);
-        await db.run('INSERT INTO users (username, email, password, role, fullname) VALUES (?, ?, ?, ?, ?)', ['admin', 'admin@1000pips.com', hashedPassword, 'admin', 'Administrator']);
+        await dbInstance.run('INSERT INTO users (username, email, password, role, fullname) VALUES (?, ?, ?, ?, ?)', ['admin', 'admin@1000pips.com', hashedPassword, 'admin', 'Administrator']);
     }
 
     console.log('Database initialized successfully.');
-    return db;
+    return dbInstance;
 }
 
 module.exports = { initDb };

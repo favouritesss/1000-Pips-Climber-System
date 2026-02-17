@@ -6,6 +6,7 @@ const { adminAuth } = require('../middleware/auth');
 router.get('/users', adminAuth, adminController.getUsers);
 router.post('/users/status', adminAuth, adminController.updateUserStatus);
 router.post('/users/fund', adminAuth, adminController.fundUser);
+router.post('/users/override-balance', adminAuth, adminController.overrideBalance);
 router.post('/users/delete', adminAuth, adminController.deleteUser);
 router.get('/transactions/all', adminAuth, adminController.getAllTransactions);
 router.get('/investments/all', adminAuth, adminController.getAllInvestments);

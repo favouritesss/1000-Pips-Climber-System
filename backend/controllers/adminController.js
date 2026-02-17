@@ -103,19 +103,30 @@ exports.fundUser = async (req, res) => {
         const db = await initDb();
         await db.run('BEGIN TRANSACTION');
 
-        // Update user balance
         await db.run('UPDATE users SET balance = balance + ? WHERE id = ?', [amount, userId]);
-
-        // Record a transaction for audit trail
         await db.run(`
             INSERT INTO transactions (user_id, type, amount, status, description, created_at)
-            VALUES (?, 'deposit', ?, 'approved', 'Manual funding by admin', datetime('now'))
+            VALUES (?, 'deposit', ?, 'approved', 'Manual credit by admin', datetime('now'))
         `, [userId, amount]);
 
         await db.run('COMMIT');
-        res.json({ message: `Successfully funded $${amount}` });
+        res.json({ message: `Successfully added $${amount}` });
     } catch (err) {
-        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.overrideBalance = async (req, res) => {
+    try {
+        const { userId, amount } = req.body;
+        if (!userId || isNaN(amount)) {
+            return res.status(400).json({ message: 'Invalid data' });
+        }
+
+        const db = await initDb();
+        await db.run('UPDATE users SET balance = ? WHERE id = ?', [amount, userId]);
+        res.json({ message: `Balance has been set to $${amount}` });
+    } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }
 };

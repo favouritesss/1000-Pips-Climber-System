@@ -16,7 +16,12 @@
     step: 1,
     amount: '',
     method: 'BTC',
-    walletAddress: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', // Placeholder wallet
+    wallets: {
+        'BTC': 'bc1q2kzfyy8eefjmqw0k0eleh6mswzy0m0h2szdtjz', 
+        'ETH': '0x5Fd7495edfB70D534Af6473Bfbad2575d208E71f',
+        'USDT': 'TYCnwq8r6eHRSoTMBx91sPyepkok9Ehqkw'
+    },
+    get walletAddress() { return this.wallets[this.method]; },
     async submitDeposit() {
         if(!this.amount || this.amount < 50) {
             alert('Minimum deposit is $50');

@@ -26,6 +26,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/invest', investRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Admin Route
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 // Catch-all route for SPA
 app.get('*', (req, res) => {
     if (req.url.startsWith('/api')) {

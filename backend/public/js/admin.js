@@ -9,9 +9,22 @@ async function fetchAdminData() {
     }
 
     try {
+        // First verify if the user is actually an admin
+        const profileRes = await fetch(`${API_URL}/auth/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const user = await profileRes.json();
+
+        if (user.role !== 'admin') {
+            alert('Access denied. This area is reserved for administrators.');
+            window.location.href = '/dashboard.html';
+            return;
+        }
+
         const statsRes = await fetch(`${API_URL}/admin/stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        if (!statsRes.ok) throw new Error('Failed to fetch admin statistics');
         const stats = await statsRes.json();
 
         document.getElementById('totalUsers').innerText = stats.totalUsers;

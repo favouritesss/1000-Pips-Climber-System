@@ -3,9 +3,23 @@ let profitChart;
 
 async function fetchDashboardData() {
     const token = localStorage.getItem('token');
+    const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+
     if (!token) {
         window.location.href = '/login.html';
         return;
+    }
+
+    // Immediate UI update from local storage
+    if (localUser.username) {
+        document.getElementById('username').innerText = localUser.username;
+        const welcomeNameElement = document.getElementById('welcomeName');
+        if (welcomeNameElement) {
+            welcomeNameElement.innerText = localUser.fullname || localUser.username;
+        }
+        if (localUser.balance !== undefined) {
+            document.getElementById('balance').innerText = `$${localUser.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        }
     }
 
     try {
@@ -14,10 +28,14 @@ async function fetchDashboardData() {
         });
         const user = await profileRes.json();
 
+        // Update local storage and UI with fresh data
+        localStorage.setItem('user', JSON.stringify(user));
+
         document.getElementById('balance').innerText = `$${user.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
         document.getElementById('earnings').innerText = `$${user.earnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
         document.getElementById('bonus').innerText = `$${user.referral_bonus.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
         document.getElementById('username').innerText = user.username;
+
         const welcomeNameElement = document.getElementById('welcomeName');
         if (welcomeNameElement) {
             welcomeNameElement.innerText = user.fullname || user.username;
@@ -36,10 +54,23 @@ async function fetchDashboardData() {
         renderTransactions(transactions);
 
         initProfitChart(transactions);
+        startLiveUpdates();
 
     } catch (err) {
         console.error(err);
     }
+}
+
+function startLiveUpdates() {
+    // Simulate live profit curve fluctuations
+    setInterval(() => {
+        if (profitChart && profitChart.data.datasets[0].data.length > 0) {
+            const lastVal = profitChart.data.datasets[0].data[profitChart.data.datasets[0].data.length - 1];
+            const change = (Math.random() - 0.4) * 5; // Slight upward bias
+            profitChart.data.datasets[0].data[profitChart.data.datasets[0].data.length - 1] = lastVal + change;
+            profitChart.update('none'); // Update without full animation for "live" feel
+        }
+    }, 3000);
 }
 
 function initProfitChart(transactions) {

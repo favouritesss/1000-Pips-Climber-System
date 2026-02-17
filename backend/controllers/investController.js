@@ -1,11 +1,35 @@
-const { initDb } = require('../db/init');
+const db = require('../db/jsonStore');
+const shortid = require('shortid');
 
-exports.getPlans = async (req, res) => {
+exports.getInvestments = async (req, res) => {
     try {
-        const db = await initDb();
-        const plans = await db.all('SELECT * FROM plans');
-        res.json(plans);
+        const investments = db.get('investments')
+            .filter({ user_id: req.user.id })
+            .value();
+
+        // Join with plans
+        const enriched = investments.map(inv => {
+            const plan = db.get('plans').find({ id: inv.plan_id }).value();
+            return { ...inv, plan_name: plan ? plan.name : 'Unknown' };
+        });
+
+        res.json(enriched);
     } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.getTransactions = async (req, res) => {
+    try {
+        const transactions = db.get('transactions')
+            .filter({ user_id: req.user.id })
+            .orderBy(['created_at'], ['desc'])
+            .take(50)
+            .value();
+        res.json(transactions);
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -13,35 +37,49 @@ exports.getPlans = async (req, res) => {
 exports.invest = async (req, res) => {
     try {
         const { plan_id, amount } = req.body;
-        const db = await initDb();
+        const userId = req.user.id;
 
-        const user = await db.get('SELECT balance FROM users WHERE id = ?', [req.user.id]);
+        const user = db.get('users').find({ id: userId }).value();
         if (user.balance < amount) {
             return res.status(400).json({ message: 'Insufficient balance' });
         }
 
-        const plan = await db.get('SELECT * FROM plans WHERE id = ?', [plan_id]);
-        if (!plan || amount < plan.min_deposit || amount > plan.max_deposit) {
-            return res.status(400).json({ message: 'Invalid plan or amount' });
+        const plan = db.get('plans').find({ id: parseInt(plan_id) }).value();
+        if (!plan) return res.status(404).json({ message: 'Plan not found' });
+
+        if (amount < plan.min_deposit || amount > plan.max_deposit) {
+            return res.status(400).json({ message: `Amount must be between $${plan.min_deposit} and $${plan.max_deposit}` });
         }
 
-        await db.run('BEGIN TRANSACTION');
-        await db.run('UPDATE users SET balance = balance - ? WHERE id = ?', [amount, req.user.id]);
+        // Deduct balance
+        db.get('users')
+            .find({ id: userId })
+            .assign({ balance: user.balance - amount })
+            .write();
 
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + plan.duration_days);
+        // Create Investment
+        db.get('investments').push({
+            id: shortid.generate(),
+            user_id: userId,
+            plan_id: parseInt(plan_id),
+            amount: parseFloat(amount),
+            roi_accrued: 0,
+            roi_percentage: plan.roi_percentage,
+            start_date: new Date().toISOString(),
+            end_date: new Date(Date.now() + plan.duration_days * 86400000).toISOString(),
+            status: 'active'
+        }).write();
 
-        await db.run(
-            'INSERT INTO investments (user_id, plan_id, amount, end_date) VALUES (?, ?, ?, ?)',
-            [req.user.id, plan_id, amount, endDate.toISOString()]
-        );
-
-        await db.run(
-            'INSERT INTO transactions (user_id, type, amount, status, description) VALUES (?, ?, ?, ?, ?)',
-            [req.user.id, 'investment', amount, 'completed', `Investment in ${plan.name} plan`]
-        );
-
-        await db.run('COMMIT');
+        // Record Transaction
+        db.get('transactions').push({
+            id: shortid.generate(),
+            user_id: userId,
+            type: 'investment',
+            amount: parseFloat(amount),
+            status: 'completed',
+            description: `Invested in ${plan.name} plan`,
+            created_at: new Date().toISOString()
+        }).write();
 
         res.json({ message: 'Investment successful' });
     } catch (err) {
@@ -50,61 +88,60 @@ exports.invest = async (req, res) => {
     }
 };
 
-exports.getInvestments = async (req, res) => {
-    try {
-        const db = await initDb();
-        const investments = await db.all(`
-            SELECT i.*, p.name as plan_name, p.roi_percentage 
-            FROM investments i 
-            JOIN plans p ON i.plan_id = p.id 
-            WHERE i.user_id = ?
-        `, [req.user.id]);
-        res.json(investments);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-exports.getTransactions = async (req, res) => {
-    try {
-        const db = await initDb();
-        const transactions = await db.all('SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
-        res.json(transactions);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-exports.requestDeposit = async (req, res) => {
+exports.deposit = async (req, res) => {
     try {
         const { amount, method } = req.body;
-        const db = await initDb();
-        await db.run(
-            'INSERT INTO transactions (user_id, type, amount, status, description) VALUES (?, ?, ?, ?, ?)',
-            [req.user.id, 'deposit', amount, 'pending', `Deposit request via ${method}`]
-        );
-        res.json({ message: 'Deposit request submitted' });
+        const userId = req.user.id;
+
+        const newTx = {
+            id: shortid.generate(),
+            user_id: userId,
+            type: 'deposit',
+            amount: parseFloat(amount),
+            status: 'pending',
+            description: `Deposit via ${method}`,
+            method: method,
+            created_at: new Date().toISOString()
+        };
+
+        db.get('transactions').push(newTx).write();
+
+        res.json({ message: 'Deposit request submitted. Please complete payment.' });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-exports.requestWithdrawal = async (req, res) => {
+exports.withdraw = async (req, res) => {
     try {
-        const { amount, method, wallet_address } = req.body;
-        const db = await initDb();
+        const { amount, wallet_address, method } = req.body;
+        const userId = req.user.id;
 
-        const user = await db.get('SELECT balance FROM users WHERE id = ?', [req.user.id]);
+        const user = db.get('users').find({ id: userId }).value();
         if (user.balance < amount) {
             return res.status(400).json({ message: 'Insufficient balance' });
         }
 
-        await db.run(
-            'INSERT INTO transactions (user_id, type, amount, status, description) VALUES (?, ?, ?, ?, ?)',
-            [req.user.id, 'withdrawal', amount, 'pending', `Withdrawal request to ${wallet_address} via ${method}`]
-        );
-        res.json({ message: 'Withdrawal request submitted' });
+        db.get('users')
+            .find({ id: userId })
+            .assign({ balance: user.balance - amount })
+            .write();
+
+        db.get('transactions').push({
+            id: shortid.generate(),
+            user_id: userId,
+            type: 'withdrawal',
+            amount: parseFloat(amount),
+            status: 'pending',
+            description: `Withdrawal to ${method} - ${wallet_address}`,
+            details: wallet_address,
+            created_at: new Date().toISOString()
+        }).write();
+
+        res.json({ message: 'Withdrawal request submitted.' });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 };

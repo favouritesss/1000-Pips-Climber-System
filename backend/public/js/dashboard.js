@@ -11,15 +11,18 @@ async function fetchDashboardData() {
     }
 
     // Immediate UI update from local storage
+    const welcomeNameElement = document.getElementById('welcomeName');
+    if (welcomeNameElement) {
+        const fullName = (localUser.fullname && localUser.fullname.trim() !== '') ? localUser.fullname : (localUser.username || 'Trader');
+        welcomeNameElement.innerText = fullName;
+    }
+    if (localUser.balance !== undefined) {
+        const balanceEl = document.getElementById('balance');
+        if (balanceEl) balanceEl.innerText = `$${localUser.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+    }
     if (localUser.username) {
-        document.getElementById('username').innerText = localUser.username;
-        const welcomeNameElement = document.getElementById('welcomeName');
-        if (welcomeNameElement) {
-            welcomeNameElement.innerText = localUser.fullname || localUser.username;
-        }
-        if (localUser.balance !== undefined) {
-            document.getElementById('balance').innerText = `$${localUser.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-        }
+        const usernameEl = document.getElementById('username');
+        if (usernameEl) usernameEl.innerText = localUser.username;
     }
 
     try {
@@ -36,15 +39,21 @@ async function fetchDashboardData() {
         // Update local storage and UI with fresh data
         localStorage.setItem('user', JSON.stringify(user));
 
-        document.getElementById('balance').innerText = `$${(user.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-        document.getElementById('earnings').innerText = `$${(user.earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-        document.getElementById('bonus').innerText = `$${(user.referral_bonus || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-        document.getElementById('username').innerText = user.username || 'User';
+        const balanceEl = document.getElementById('balance');
+        if (balanceEl) balanceEl.innerText = `$${(user.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
-        const welcomeNameElement = document.getElementById('welcomeName');
+        const earningsEl = document.getElementById('earnings');
+        if (earningsEl) earningsEl.innerText = `$${(user.earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
+        const bonusEl = document.getElementById('bonus');
+        if (bonusEl) bonusEl.innerText = `$${(user.referral_bonus || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
+        const usernameEl = document.getElementById('username');
+        if (usernameEl) usernameEl.innerText = user.username || 'User';
+
         if (welcomeNameElement) {
-            const displayName = (user.fullname && user.fullname.trim() !== "") ? user.fullname : user.username;
-            welcomeNameElement.innerText = displayName || 'Trader';
+            const fullName = (user.fullname && user.fullname.trim() !== '') ? user.fullname : (user.username || 'Trader');
+            welcomeNameElement.innerText = fullName;
         }
 
         const invRes = await fetch(`${API_URL}/invest/investments`, {
@@ -253,4 +262,9 @@ async function handleWithdrawal(amount, method, wallet) {
     if (res.ok) fetchDashboardData();
 }
 
-document.addEventListener('DOMContentLoaded', fetchDashboardData);
+// Execute immediately if DOM is already loaded, otherwise wait
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fetchDashboardData);
+} else {
+    fetchDashboardData();
+}

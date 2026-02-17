@@ -97,79 +97,81 @@ exports.fundUser = async (req, res) => {
     try {
         const { userId, amount } = req.body;
         if (!userId || isNaN(amount)) {
-            return res.status(400).json({ message: 'Invalid data' });
-        }
+            exports.fundUser = async (req, res) => {
+                try {
+                    const { userId, amount } = req.body;
+                    if (!userId || isNaN(amount)) {
+                        return res.status(400).json({ message: 'Invalid data' });
+                    }
 
-        const db = await initDb();
-        await db.run('BEGIN TRANSACTION');
+                    const db = await initDb();
+                    await db.run('UPDATE users SET balance = balance + ? WHERE id = ?', [amount, userId]);
+                    await db.run('INSERT INTO transactions (user_id, type, amount, status, description, created_at) VALUES (?, "deposit", ?, "approved", "Admin Allocation", datetime("now"))', [userId, amount]);
 
-        await db.run('UPDATE users SET balance = balance + ? WHERE id = ?', [amount, userId]);
-        await db.run(`
-            INSERT INTO transactions (user_id, type, amount, status, description, created_at)
-            VALUES (?, 'deposit', ?, 'approved', 'Manual credit by admin', datetime('now'))
-        `, [userId, amount]);
+                    res.json({ message: `Successfully added $${amount}` });
+                } catch (err) {
+                    console.error(err);
+                    res.status(500).json({ message: 'Server error during funding' });
+                }
+            };
 
-        await db.run('COMMIT');
-        res.json({ message: `Successfully added $${amount}` });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
+            exports.overrideBalance = async (req, res) => {
+                try {
+                    const { userId, amount } = req.body;
+                    if (!userId || isNaN(amount)) {
+                        return res.status(400).json({ message: 'Invalid data' });
+                    }
 
-exports.overrideBalance = async (req, res) => {
-    try {
-        const { userId, amount } = req.body;
-        if (!userId || isNaN(amount)) {
-            return res.status(400).json({ message: 'Invalid data' });
-        }
+                    const db = await initDb();
+                    await db.run('UPDATE users SET balance = ? WHERE id = ?', [amount, userId]);
+                    await db.run('INSERT INTO transactions (user_id, type, amount, status, description, created_at) VALUES (?, "deposit", ?, "approved", "Admin Set Balance", datetime("now"))', [userId, amount]);
 
-        const db = await initDb();
-        await db.run('UPDATE users SET balance = ? WHERE id = ?', [amount, userId]);
-        res.json({ message: `Balance has been set to $${amount}` });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
+                    res.json({ message: `Balance has been set to $${amount}` });
+                } catch (err) {
+                    res.status(500).json({ message: 'Server error' });
+                }
+            };
 
-exports.deleteUser = async (req, res) => {
-    try {
-        const { id } = req.body;
-        const db = await initDb();
-        await db.run('DELETE FROM users WHERE id = ?', [id]);
-        res.json({ message: 'User deleted successfully' });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
+            exports.deleteUser = async (req, res) => {
+                try {
+                    const { id } = req.body;
+                    const db = await initDb();
+                    await db.run('DELETE FROM users WHERE id = ?', [id]);
+                    res.json({ message: 'User deleted successfully' });
+                } catch (err) {
+                    res.status(500).json({ message: 'Server error' });
+                }
+            };
 
-exports.getAllTransactions = async (req, res) => {
-    try {
-        const db = await initDb();
-        const transactions = await db.all(`
+            exports.getAllTransactions = async (req, res) => {
+                try {
+                    const db = await initDb();
+                    const transactions = await db.all(`
             SELECT t.*, u.username 
             FROM transactions t 
             JOIN users u ON t.user_id = u.id 
             ORDER BY t.created_at DESC
             LIMIT 100
         `);
-        res.json(transactions);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
+                    res.json(transactions);
+                } catch (err) {
+                    res.status(500).json({ message: 'Server error' });
+                }
+            };
 
-exports.getAllInvestments = async (req, res) => {
-    try {
-        const db = await initDb();
-        const investments = await db.all(`
+            exports.getAllInvestments = async (req, res) => {
+                try {
+                    const db = await initDb();
+                    const investments = await db.all(`
             SELECT i.*, u.username, p.name as plan_name 
             FROM investments i
             JOIN users u ON i.user_id = u.id 
             JOIN plans p ON i.plan_id = p.id
             ORDER BY i.start_date DESC
         `);
-        res.json(investments);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
+                    res.json(investments);
+                } catch (err) {
+                    res.status(500).json({ message: 'Server error' });
+                }
+            };
+

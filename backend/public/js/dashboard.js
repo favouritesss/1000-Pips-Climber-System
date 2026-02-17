@@ -66,14 +66,41 @@ async function fetchDashboardData() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const transactions = await transRes.json();
-        renderTransactions(transactions);
-
         initProfitChart(transactions);
         startLiveUpdates();
+        setInterval(pollBalance, 5000); // Check for new funds every 5 seconds
 
     } catch (err) {
         console.error(err);
     }
+}
+
+async function pollBalance() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const profileRes = await fetch(`${API_URL}/auth/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!profileRes.ok) return;
+
+        const user = await profileRes.json();
+
+        // Only update if changed to avoid UI flickering
+        const currentBalance = document.getElementById('balance').innerText.replace(/[^0-9.-]+/g, "");
+        if (parseFloat(currentBalance) !== user.balance) {
+            document.getElementById('balance').innerText = `$${user.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+            localStorage.setItem('user', JSON.stringify(user));
+
+            // Refresh transactions too if balance changed
+            const transRes = await fetch(`${API_URL}/invest/transactions`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const transactions = await transRes.json();
+            renderTransactions(transactions);
+        }
+    } catch (e) { console.error(e); }
 }
 
 function startLiveUpdates() {

@@ -196,24 +196,8 @@ function renderAllTransactions(transactions) {
 }
 
 // Make this function global for inline onclick
-window.openFundModal = function (userId, username) {
-    const alpineEl = document.querySelector('[x-data]');
-    if (alpineEl && alpineEl.__x) {
-        const data = alpineEl.__x.$data;
-        data.selectedUser = { id: userId, username: username };
-        data.fundMode = 'add';
-        data.showFundModal = true;
-        data.fundAmount = '';
-        setTimeout(() => {
-            const input = document.querySelector('input[x-model="fundAmount"]');
-            if (input) input.focus();
-        }, 100);
-    } else {
-        console.error('Alpine component not found');
-        // Fallback for non-Alpine environment if necessary
-        alert('Error: Admin dashboard component not initialized.');
-    }
-}
+// openFundModal is handled by Alpine.js in admin.html, removing duplicate or conflicting global definition.
+// Window property assignment removed to ensure Alpine x-data takes precedence.
 
 function closeFundModal() {
     const alpineEl = document.querySelector('[x-data]');

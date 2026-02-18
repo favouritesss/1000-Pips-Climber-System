@@ -245,7 +245,26 @@ async function fetchDashboardData() {
         // Update UI with fresh data
         setDisplayName(user);
 
-        if (balanceEl) balanceEl.innerText = '$' + parseFloat(user.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+        if (balanceEl) {
+            balanceEl.innerText = '$' + parseFloat(user.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+            if ((user.balance || 0) <= 50) {
+                balanceEl.classList.add('text-red-500');
+                balanceEl.classList.remove('text-white');
+                const warning = document.getElementById('balanceWarning');
+                if (!warning) {
+                    const w = document.createElement('div');
+                    w.id = 'balanceWarning';
+                    w.className = 'mt-2 text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse';
+                    w.innerHTML = '<i class="fas fa-exclamation-circle"></i> Low Balance - Fund Now';
+                    balanceEl.parentElement.appendChild(w);
+                }
+            } else {
+                balanceEl.classList.add('text-white');
+                balanceEl.classList.remove('text-red-500');
+                const warning = document.getElementById('balanceWarning');
+                if (warning) warning.remove();
+            }
+        }
 
         const earningsEl = document.getElementById('earnings');
         if (earningsEl) earningsEl.innerText = '$' + parseFloat(user.earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });

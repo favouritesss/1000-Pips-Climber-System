@@ -21,30 +21,35 @@ exports.updateUserStatus = async (req, res) => {
 
 exports.fundUser = async (req, res) => {
     try {
-        const { userId, amount } = req.body;
+        let { userId, amount } = req.body;
+        amount = parseFloat(amount);
         if (!userId || isNaN(amount)) {
             return res.status(400).json({ message: 'Invalid data' });
         }
 
-        const user = db.get('users').find({ id: userId }).value();
+        // IDs may be stored as numbers (Date.now()) — try both string and number
+        let user = db.get('users').find({ id: userId }).value();
+        if (!user) user = db.get('users').find({ id: parseInt(userId) }).value();
+        if (!user) user = db.get('users').find({ id: String(userId) }).value();
         if (!user) return res.status(404).json({ message: 'User not found' });
 
+        const realId = user.id; // use the actual stored ID type
         db.get('users')
-            .find({ id: userId })
+            .find({ id: realId })
             .assign({ balance: (user.balance || 0) + amount })
             .write();
 
         db.get('transactions').push({
             id: Date.now().toString(),
-            user_id: userId,
+            user_id: realId,
             type: 'deposit',
-            amount: parseFloat(amount),
+            amount: amount,
             status: 'approved',
             description: 'Admin Allocation',
             created_at: new Date().toISOString()
         }).write();
 
-        res.json({ message: `Successfully added $${amount}` });
+        res.json({ message: `Successfully added $${amount} to ${user.username}` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error during funding' });
@@ -53,21 +58,25 @@ exports.fundUser = async (req, res) => {
 
 exports.overrideBalance = async (req, res) => {
     try {
-        const { userId, amount } = req.body;
+        let { userId, amount } = req.body;
+        amount = parseFloat(amount);
         if (!userId || isNaN(amount)) {
             return res.status(400).json({ message: 'Invalid data' });
         }
 
-        db.get('users')
-            .find({ id: userId })
-            .assign({ balance: parseFloat(amount) })
-            .write();
+        let user = db.get('users').find({ id: userId }).value();
+        if (!user) user = db.get('users').find({ id: parseInt(userId) }).value();
+        if (!user) user = db.get('users').find({ id: String(userId) }).value();
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const realId = user.id;
+        db.get('users').find({ id: realId }).assign({ balance: amount }).write();
 
         db.get('transactions').push({
             id: Date.now().toString(),
-            user_id: userId,
+            user_id: realId,
             type: 'deposit',
-            amount: parseFloat(amount),
+            amount: amount,
             status: 'approved',
             description: 'Admin Set Balance',
             created_at: new Date().toISOString()

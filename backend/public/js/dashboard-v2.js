@@ -56,9 +56,9 @@ function initProfitChart(transactions) {
                 datasets: [{
                     label: 'Portfolio Value',
                     data: dataPoints,
-                    borderColor: '#3B82F6',
-                    borderWidth: 3,
-                    pointBackgroundColor: '#3B82F6',
+                    borderColor: '#22d3ee', // Bright Cyan for high contrast
+                    borderWidth: 4,
+                    pointBackgroundColor: '#22d3ee',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
                     pointRadius: 4,
@@ -187,10 +187,12 @@ function setDisplayName(user) {
     if (!user) return;
 
     let displayName = 'Valued Member';
-    if (user.fullname && user.fullname.trim() !== '' && user.fullname.trim() !== 'undefined') {
-        displayName = user.fullname.trim();
-    } else if (user.username && user.username.trim() !== '') {
+
+    // Prioritize username as requested ("name used in registering")
+    if (user.username && user.username.trim() !== '') {
         displayName = user.username.trim();
+    } else if (user.fullname && user.fullname.trim() !== '' && user.fullname.trim() !== 'undefined') {
+        displayName = user.fullname.trim();
     }
 
     if (welcomeNameElement) welcomeNameElement.innerText = displayName;

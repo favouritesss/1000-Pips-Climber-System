@@ -195,16 +195,32 @@ function renderAllTransactions(transactions) {
     });
 }
 
-function openFundModal(userId, username) {
-    document.getElementById('fundUserId').value = userId;
-    document.getElementById('fundTargetUser').querySelector('span').innerText = username;
-    document.getElementById('fundModal').classList.remove('hidden');
-    document.getElementById('fundAmount').focus();
+// Make this function global for inline onclick
+window.openFundModal = function (userId, username) {
+    const alpineEl = document.querySelector('[x-data]');
+    if (alpineEl && alpineEl.__x) {
+        const data = alpineEl.__x.$data;
+        data.selectedUser = { id: userId, username: username };
+        data.fundMode = 'add';
+        data.showFundModal = true;
+        data.fundAmount = '';
+        setTimeout(() => {
+            const input = document.querySelector('input[x-model="fundAmount"]');
+            if (input) input.focus();
+        }, 100);
+    } else {
+        console.error('Alpine component not found');
+        // Fallback for non-Alpine environment if necessary
+        alert('Error: Admin dashboard component not initialized.');
+    }
 }
 
 function closeFundModal() {
-    document.getElementById('fundModal').classList.add('hidden');
-    document.getElementById('fundAmount').value = '';
+    const alpineEl = document.querySelector('[x-data]');
+    if (alpineEl && alpineEl.__x) {
+        alpineEl.__x.$data.showFundModal = false;
+        alpineEl.__x.$data.fundAmount = '';
+    }
 }
 
 async function executeFunding() {

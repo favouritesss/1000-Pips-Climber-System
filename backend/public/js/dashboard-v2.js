@@ -37,8 +37,13 @@ function initProfitChart(transactions) {
 
     // Always fall back to simulation if no dataPoints generated
     if (dataPoints.length === 0) {
-        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        dataPoints = [0, 120, 350, 480, 800, 1200, 1850];
+        labels = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            labels.push(d.toLocaleDateString(undefined, { weekday: 'short' }));
+        }
+        dataPoints = [0, 150, 420, 380, 890, 1450, 2100];
     }
 
     if (profitChart) profitChart.destroy();

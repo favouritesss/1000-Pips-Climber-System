@@ -122,72 +122,17 @@ async function fetchDashboardData() {
                     }
                 }
             }
-        }
-            }
-});
+        });
     }
 
-pointBorderWidth: 2,
-    pointRadius: 4,
-        pointHoverRadius: 6,
-            tension: 0.4,
-                fill: true,
-                    backgroundColor: (context) => {
-                        const chart = context.chart;
-                        const { ctx, chartArea } = chart;
-                        if (!chartArea) return null;
-                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0)');
-                        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.25)'); // More transparent
-                        return gradient;
-                    }
-                }
-            }]
-        },
-options: {
-    responsive: true,
-        maintainAspectRatio: false,
-            interaction: {
-        intersect: false,
-            mode: 'index',
-            },
-    plugins: {
-        legend: { display: false },
-        tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                titleColor: '#fff',
-                    bodyColor: '#cbd5e1',
-                        borderColor: 'rgba(255,255,255,0.1)',
-                            borderWidth: 1,
-                                padding: 10,
-                                    displayColors: false,
-                                        callbacks: {
-                label: (context) => `Value: $${context.raw.toFixed(2)}`
-            }
-        }
-    },
-    scales: {
-        x: {
-            grid: { display: false },
-            ticks: { color: '#64748B', font: { size: 10, weight: 'bold' } }
-        },
-        y: {
-            grid: { color: 'rgba(255,255,255,0.03)' },
-            ticks: { color: '#64748B', font: { size: 10, weight: 'bold' }, callback: (value) => '$' + value }
-        }
-    }
-}
-    });
-}
+    function renderTransactions(transactions) {
+        const container = document.getElementById('transactionsList');
+        container.innerHTML = transactions.length ? '' : '<tr><td colspan="4" class="p-12 text-center text-gray-600 font-bold">Safe keeps empty. No activity found.</td></tr>';
+        transactions.forEach(tx => {
+            const color = tx.type === 'deposit' || tx.type === 'bonus' || tx.type === 'roi' ? 'text-green-400' : 'text-red-400';
+            const icon = tx.type === 'deposit' ? 'fa-arrow-down' : tx.type === 'withdrawal' ? 'fa-arrow-up' : 'fa-gift';
 
-function renderTransactions(transactions) {
-    const container = document.getElementById('transactionsList');
-    container.innerHTML = transactions.length ? '' : '<tr><td colspan="4" class="p-12 text-center text-gray-600 font-bold">Safe keeps empty. No activity found.</td></tr>';
-    transactions.forEach(tx => {
-        const color = tx.type === 'deposit' || tx.type === 'bonus' || tx.type === 'roi' ? 'text-green-400' : 'text-red-400';
-        const icon = tx.type === 'deposit' ? 'fa-arrow-down' : tx.type === 'withdrawal' ? 'fa-arrow-up' : 'fa-gift';
-
-        container.innerHTML += `
+            container.innerHTML += `
     < tr class="border-b border-gray-800/50 hover:bg-white/[0.02] transition-colors" >
                 <td class="px-6 py-4 text-xs font-bold text-gray-400">${new Date(tx.created_at).toLocaleDateString()}</td>
                 <td class="px-6 py-4">
@@ -206,60 +151,60 @@ function renderTransactions(transactions) {
                 </td>
             </tr >
     `;
-    });
-}
-
-async function handleInvestment(planId, amount) {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_URL} /invest/invest`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token} `
-        },
-        body: JSON.stringify({ plan_id: planId, amount })
-    });
-    const data = await res.json();
-    if (res.ok) {
-        fetchDashboardData();
-    } else {
-        alert(data.message);
+        });
     }
-}
 
-async function handleDeposit(amount, method) {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_URL} /invest/deposit`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token} `
-        },
-        body: JSON.stringify({ amount, method })
-    });
-    const data = await res.json();
-    alert(data.message);
-    if (res.ok) fetchDashboardData();
-}
+    async function handleInvestment(planId, amount) {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_URL} /invest/invest`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token} `
+            },
+            body: JSON.stringify({ plan_id: planId, amount })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            fetchDashboardData();
+        } else {
+            alert(data.message);
+        }
+    }
 
-async function handleWithdrawal(amount, method, wallet) {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_URL} /invest/withdraw`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token} `
-        },
-        body: JSON.stringify({ amount, method, wallet_address: wallet })
-    });
-    const data = await res.json();
-    alert(data.message);
-    if (res.ok) fetchDashboardData();
-}
+    async function handleDeposit(amount, method) {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_URL} /invest/deposit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token} `
+            },
+            body: JSON.stringify({ amount, method })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if (res.ok) fetchDashboardData();
+    }
 
-// Execute immediately if DOM is already loaded, otherwise wait
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', fetchDashboardData);
-} else {
-    fetchDashboardData();
-}
+    async function handleWithdrawal(amount, method, wallet) {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_URL} /invest/withdraw`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token} `
+            },
+            body: JSON.stringify({ amount, method, wallet_address: wallet })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if (res.ok) fetchDashboardData();
+    }
+
+    // Execute immediately if DOM is already loaded, otherwise wait
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fetchDashboardData);
+    } else {
+        fetchDashboardData();
+    }

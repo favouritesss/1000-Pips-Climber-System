@@ -4,6 +4,7 @@ let profitChart;
 function initProfitChart(transactions) {
     // If Chart.js isn't loaded yet, retry after 500ms
     if (typeof Chart === 'undefined') {
+        console.warn('Chart.js not loaded, retrying...');
         setTimeout(() => initProfitChart(transactions), 500);
         return;
     }
@@ -15,19 +16,26 @@ function initProfitChart(transactions) {
     let labels = [];
     let dataPoints = [];
 
-    if (transactions && transactions.length > 0) {
+    // Ensure transactions is an array
+    if (Array.isArray(transactions) && transactions.length > 0) {
         const sorted = [...transactions].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         let runningBalance = 0;
         const recent = sorted.slice(-15);
         recent.forEach(tx => {
             labels.push(new Date(tx.created_at).toLocaleDateString(undefined, { weekday: 'short' }));
-            if (['deposit', 'roi', 'bonus', 'investment'].includes(tx.type)) runningBalance += tx.amount;
-            if (tx.type === 'withdrawal') runningBalance -= tx.amount;
+            // Add deposits/bonuses/investments to running balance
+            if (['deposit', 'roi', 'bonus', 'investment'].includes(tx.type)) {
+                runningBalance += (parseFloat(tx.amount) || 0);
+            }
+            // Subtract withdrawals
+            if (tx.type === 'withdrawal') {
+                runningBalance -= (parseFloat(tx.amount) || 0);
+            }
             dataPoints.push(parseFloat(runningBalance.toFixed(2)));
         });
     }
 
-    // Always fall back to simulation if no data
+    // Always fall back to simulation if no dataPoints generated
     if (dataPoints.length === 0) {
         labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         dataPoints = [0, 120, 350, 480, 800, 1200, 1850];
@@ -35,69 +43,73 @@ function initProfitChart(transactions) {
 
     if (profitChart) profitChart.destroy();
 
-    profitChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Portfolio Value',
-                data: dataPoints,
-                borderColor: '#3B82F6',
-                borderWidth: 3,
-                pointBackgroundColor: '#3B82F6',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                tension: 0.4,
-                fill: true,
-                backgroundColor: function (context) {
-                    var chart = context.chart;
-                    var chartCtx = chart.ctx;
-                    var chartArea = chart.chartArea;
-                    if (!chartArea) return 'rgba(59,130,246,0.1)';
-                    var gradient = chartCtx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                    gradient.addColorStop(0, 'rgba(59, 130, 246, 0)');
-                    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.25)');
-                    return gradient;
-                }
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { intersect: false, mode: 'index' },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                    titleColor: '#fff',
-                    bodyColor: '#cbd5e1',
-                    borderColor: 'rgba(255,255,255,0.1)',
-                    borderWidth: 1,
-                    padding: 10,
-                    displayColors: false,
-                    callbacks: {
-                        label: function (context) { return 'Value: $' + context.raw.toFixed(2); }
+    try {
+        profitChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Portfolio Value',
+                    data: dataPoints,
+                    borderColor: '#3B82F6',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#3B82F6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: function (context) {
+                        var chart = context.chart;
+                        var chartCtx = chart.ctx;
+                        var chartArea = chart.chartArea;
+                        if (!chartArea) return 'rgba(59,130,246,0.1)';
+                        var gradient = chartCtx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0)');
+                        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.25)');
+                        return gradient;
                     }
-                }
+                }]
             },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#64748B', font: { size: 10, weight: 'bold' } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#cbd5e1',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: false,
+                        callbacks: {
+                            label: function (context) { return 'Value: $' + context.raw.toFixed(2); }
+                        }
+                    }
                 },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.03)' },
-                    ticks: {
-                        color: '#64748B',
-                        font: { size: 10, weight: 'bold' },
-                        callback: function (value) { return '$' + value; }
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748B', font: { size: 10, weight: 'bold' } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.03)' },
+                        ticks: {
+                            color: '#64748B',
+                            font: { size: 10, weight: 'bold' },
+                            callback: function (value) { return '$' + value; }
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (e) {
+        console.error('Error creating chart:', e);
+    }
 }
 
 function renderInvestments(investments) {
@@ -200,8 +212,8 @@ async function fetchDashboardData() {
     initProfitChart([]);
 
     try {
-        // Fetch fresh profile
-        const profileRes = await fetch(API_URL + '/auth/profile', {
+        // Fetch fresh profile with cache-busting timestamp
+        const profileRes = await fetch(`${API_URL}/auth/profile?t=${Date.now()}`, {
             headers: { 'Authorization': 'Bearer ' + token }
         });
 
@@ -229,7 +241,7 @@ async function fetchDashboardData() {
         if (bonusEl) bonusEl.innerText = '$' + parseFloat(user.referral_bonus || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
 
         // Fetch investments
-        const invRes = await fetch(API_URL + '/invest/investments', {
+        const invRes = await fetch(`${API_URL}/invest/investments?t=${Date.now()}`, {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (invRes.ok) {
@@ -238,30 +250,34 @@ async function fetchDashboardData() {
         }
 
         // Fetch transactions and update chart with real data
-        const transRes = await fetch(API_URL + '/invest/transactions', {
+        const transRes = await fetch(`${API_URL}/invest/transactions?t=${Date.now()}`, {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (transRes.ok) {
             const transactions = await transRes.json();
-            if (transactions && transactions.length > 0) {
+            if (Array.isArray(transactions) && transactions.length > 0) {
                 initProfitChart(transactions);
             }
             renderTransactions(transactions);
         }
 
-        // Poll for balance updates every 5 seconds
+        // Poll for balance updates every 10 seconds
         setInterval(async function () {
             try {
-                const r = await fetch(API_URL + '/auth/profile', {
+                const r = await fetch(`${API_URL}/auth/profile?t=${Date.now()}`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
                 if (r.ok) {
                     const u = await r.json();
                     localStorage.setItem('user', JSON.stringify(u));
                     if (balanceEl) balanceEl.innerText = '$' + parseFloat(u.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+                    // Also update other stats
+                    if (earningsEl) earningsEl.innerText = '$' + parseFloat(u.earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                    if (bonusEl) bonusEl.innerText = '$' + parseFloat(u.referral_bonus || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
                 }
             } catch (e) { }
-        }, 5000);
+        }, 10000);
 
     } catch (err) {
         console.error('Dashboard error:', err);

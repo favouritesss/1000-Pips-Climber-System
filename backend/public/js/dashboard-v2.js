@@ -1,4 +1,9 @@
-const API_URL = '/api';
+// API_URL is already declared in auth.js if included, but if not, we handle it safely.
+// However, dashboard.html includes auth.js BEFORE dashboard-v2.js.
+// So let's check if it exists before declaring.
+if (typeof API_URL === 'undefined') {
+    var API_URL = '/api';
+}
 let profitChart;
 
 function initProfitChart(transactions) {
@@ -291,11 +296,8 @@ async function fetchDashboardData() {
     }
 }
 
-function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login.html';
-}
+// logout function is already defined in auth.js which is included in dashboard.html
+
 
 // Start on DOM ready
 if (document.readyState === 'loading') {

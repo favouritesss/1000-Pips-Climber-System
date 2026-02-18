@@ -2,6 +2,7 @@
 if (typeof API_URL === 'undefined') {
     var API_URL = '/api';
 }
+let adminDataInitialized = false;
 let allUsers = [];
 
 async function fetchAdminData() {

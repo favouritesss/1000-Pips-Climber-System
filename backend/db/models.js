@@ -16,7 +16,7 @@ const UserSchema = new mongoose.Schema({
 });
 
 const TransactionSchema = new mongoose.Schema({
-    user_id: { type: mongoose.Schema.Types.Mixed, required: true },
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     type: { type: String, required: true }, // deposit, withdrawal, investment, roi, bonus
     amount: { type: Number, required: true },
     status: { type: String, default: 'pending' }, // pending, approved, rejected, completed
@@ -27,7 +27,7 @@ const TransactionSchema = new mongoose.Schema({
 });
 
 const InvestmentSchema = new mongoose.Schema({
-    user_id: { type: mongoose.Schema.Types.Mixed, required: true },
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     plan_id: { type: Number, required: true },
     plan_name: { type: String, default: '' },
     amount: { type: Number, required: true },

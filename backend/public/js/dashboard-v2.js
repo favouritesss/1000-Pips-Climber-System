@@ -239,6 +239,7 @@ async function fetchDashboardData() {
         }
 
         const user = await profileRes.json();
+        console.log("User Data Fetched:", user); // Debugging log
         localStorage.setItem('user', JSON.stringify(user));
 
         // Update UI with fresh data

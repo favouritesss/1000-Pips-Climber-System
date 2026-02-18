@@ -1,13 +1,22 @@
 const db = require('../db/jsonStore');
 const shortid = require('shortid');
 
+exports.getPlans = async (req, res) => {
+    try {
+        const plans = db.get('plans').value();
+        res.json(plans);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 exports.getInvestments = async (req, res) => {
     try {
         const investments = db.get('investments')
             .filter({ user_id: req.user.id })
             .value();
 
-        // Join with plans
         const enriched = investments.map(inv => {
             const plan = db.get('plans').find({ id: inv.plan_id }).value();
             return { ...inv, plan_name: plan ? plan.name : 'Unknown' };
@@ -51,13 +60,11 @@ exports.invest = async (req, res) => {
             return res.status(400).json({ message: `Amount must be between $${plan.min_deposit} and $${plan.max_deposit}` });
         }
 
-        // Deduct balance
         db.get('users')
             .find({ id: userId })
             .assign({ balance: user.balance - amount })
             .write();
 
-        // Create Investment
         db.get('investments').push({
             id: shortid.generate(),
             user_id: userId,
@@ -70,7 +77,6 @@ exports.invest = async (req, res) => {
             status: 'active'
         }).write();
 
-        // Record Transaction
         db.get('transactions').push({
             id: shortid.generate(),
             user_id: userId,
@@ -88,7 +94,7 @@ exports.invest = async (req, res) => {
     }
 };
 
-exports.deposit = async (req, res) => {
+exports.requestDeposit = async (req, res) => {
     try {
         const { amount, method } = req.body;
         const userId = req.user.id;
@@ -113,7 +119,7 @@ exports.deposit = async (req, res) => {
     }
 };
 
-exports.withdraw = async (req, res) => {
+exports.requestWithdrawal = async (req, res) => {
     try {
         const { amount, wallet_address, method } = req.body;
         const userId = req.user.id;

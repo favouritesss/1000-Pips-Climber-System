@@ -1,19 +1,20 @@
-const db = require('../db/jsonStore');
+const bcrypt = require('bcryptjs');
+const { User, Transaction, Investment } = require('../db/models');
 
 exports.getUsers = async (req, res) => {
     try {
-        const users = db.get('users').value();
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-exports.updateUserStatus = async (req, res) => {
-    try {
-        const { id, status } = req.body;
-        db.get('users').find({ id }).assign({ status }).write();
-        res.json({ message: 'User status updated' });
+        const users = await User.find({ role: 'user' }).select('-password').sort({ created_at: -1 });
+        res.json(users.map(u => ({
+            id: u._id.toString(),
+            username: u.username,
+            email: u.email,
+            fullname: u.fullname,
+            balance: u.balance,
+            earnings: u.earnings,
+            referral_bonus: u.referral_bonus,
+            status: u.status,
+            created_at: u.created_at
+        })));
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }
@@ -21,35 +22,25 @@ exports.updateUserStatus = async (req, res) => {
 
 exports.fundUser = async (req, res) => {
     try {
-        let { userId, amount } = req.body;
-        amount = parseFloat(amount);
-        if (!userId || isNaN(amount)) {
-            return res.status(400).json({ message: 'Invalid data' });
-        }
+        const { userId, amount } = req.body;
+        const parsedAmount = parseFloat(amount);
+        if (!userId || isNaN(parsedAmount)) return res.status(400).json({ message: 'Invalid data' });
 
-        // IDs may be stored as numbers (Date.now()) — try both string and number
-        let user = db.get('users').find({ id: userId }).value();
-        if (!user) user = db.get('users').find({ id: parseInt(userId) }).value();
-        if (!user) user = db.get('users').find({ id: String(userId) }).value();
+        const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const realId = user.id; // use the actual stored ID type
-        db.get('users')
-            .find({ id: realId })
-            .assign({ balance: (user.balance || 0) + amount })
-            .write();
+        user.balance += parsedAmount;
+        await user.save();
 
-        db.get('transactions').push({
-            id: Date.now().toString(),
-            user_id: realId,
+        await Transaction.create({
+            user_id: userId,
             type: 'deposit',
-            amount: amount,
+            amount: parsedAmount,
             status: 'approved',
-            description: 'Admin Allocation',
-            created_at: new Date().toISOString()
-        }).write();
+            description: 'Admin Allocation'
+        });
 
-        res.json({ message: `Successfully added $${amount} to ${user.username}` });
+        res.json({ message: `Successfully added $${parsedAmount} to ${user.username}` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error during funding' });
@@ -58,31 +49,44 @@ exports.fundUser = async (req, res) => {
 
 exports.overrideBalance = async (req, res) => {
     try {
-        let { userId, amount } = req.body;
-        amount = parseFloat(amount);
-        if (!userId || isNaN(amount)) {
-            return res.status(400).json({ message: 'Invalid data' });
-        }
+        const { userId, amount } = req.body;
+        const parsedAmount = parseFloat(amount);
+        if (!userId || isNaN(parsedAmount)) return res.status(400).json({ message: 'Invalid data' });
 
-        let user = db.get('users').find({ id: userId }).value();
-        if (!user) user = db.get('users').find({ id: parseInt(userId) }).value();
-        if (!user) user = db.get('users').find({ id: String(userId) }).value();
+        const user = await User.findByIdAndUpdate(userId, { balance: parsedAmount }, { new: true });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const realId = user.id;
-        db.get('users').find({ id: realId }).assign({ balance: amount }).write();
-
-        db.get('transactions').push({
-            id: Date.now().toString(),
-            user_id: realId,
+        await Transaction.create({
+            user_id: userId,
             type: 'deposit',
-            amount: amount,
+            amount: parsedAmount,
             status: 'approved',
-            description: 'Admin Set Balance',
-            created_at: new Date().toISOString()
-        }).write();
+            description: 'Admin Set Balance'
+        });
 
-        res.json({ message: `Balance has been set to $${amount}` });
+        res.json({ message: `Balance set to $${parsedAmount}` });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.updateUserStatus = async (req, res) => {
+    try {
+        const { id, status } = req.body;
+        await User.findByIdAndUpdate(id, { status });
+        res.json({ message: 'User status updated' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.deleteUser = async (req, res) => {
+    try {
+        const { id } = req.body;
+        await User.findByIdAndDelete(id);
+        await Transaction.deleteMany({ user_id: id });
+        await Investment.deleteMany({ user_id: id });
+        res.json({ message: 'User deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }
@@ -90,16 +94,16 @@ exports.overrideBalance = async (req, res) => {
 
 exports.getPendingTransactions = async (req, res) => {
     try {
-        const transactions = db.get('transactions')
-            .filter({ status: 'pending' })
-            .value();
-
-        // Enrich with user info
-        const enriched = transactions.map(tx => {
-            const user = db.get('users').find({ id: tx.user_id }).value();
-            return { ...tx, username: user ? user.username : 'Unknown', email: user ? user.email : 'Unknown' };
-        });
-
+        const transactions = await Transaction.find({ status: 'pending' }).sort({ created_at: -1 });
+        const enriched = await Promise.all(transactions.map(async tx => {
+            const user = await User.findById(tx.user_id).select('username email');
+            return {
+                ...tx.toObject(),
+                id: tx._id.toString(),
+                username: user ? user.username : 'Unknown',
+                email: user ? user.email : 'Unknown'
+            };
+        }));
         res.json(enriched);
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
@@ -109,17 +113,15 @@ exports.getPendingTransactions = async (req, res) => {
 exports.approveTransaction = async (req, res) => {
     try {
         const { id } = req.body;
-        const tx = db.get('transactions').find({ id }).value();
-
+        const tx = await Transaction.findById(id);
         if (!tx) return res.status(404).json({ message: 'Transaction not found' });
 
         if (tx.type === 'deposit') {
-            const user = db.get('users').find({ id: tx.user_id }).value();
-            db.get('users').find({ id: tx.user_id }).assign({ balance: (user.balance || 0) + tx.amount }).write();
+            await User.findByIdAndUpdate(tx.user_id, { $inc: { balance: tx.amount } });
         }
-        // Withdrawal already deducted balance in investController, so no balance change needed unless we want to "refund" on rejection.
 
-        db.get('transactions').find({ id }).assign({ status: 'approved' }).write();
+        tx.status = 'approved';
+        await tx.save();
         res.json({ message: 'Transaction approved' });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
@@ -129,15 +131,16 @@ exports.approveTransaction = async (req, res) => {
 exports.rejectTransaction = async (req, res) => {
     try {
         const { id } = req.body;
-        const tx = db.get('transactions').find({ id }).value();
+        const tx = await Transaction.findById(id);
+        if (!tx) return res.status(404).json({ message: 'Transaction not found' });
 
         if (tx.type === 'withdrawal') {
-            // Refund the user if we deducted balance on request
-            const user = db.get('users').find({ id: tx.user_id }).value();
-            db.get('users').find({ id: tx.user_id }).assign({ balance: (user.balance || 0) + tx.amount }).write();
+            // Refund the balance
+            await User.findByIdAndUpdate(tx.user_id, { $inc: { balance: tx.amount } });
         }
 
-        db.get('transactions').find({ id }).assign({ status: 'rejected' }).write();
+        tx.status = 'rejected';
+        await tx.save();
         res.json({ message: 'Transaction rejected' });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
@@ -146,20 +149,20 @@ exports.rejectTransaction = async (req, res) => {
 
 exports.getDashboardStats = async (req, res) => {
     try {
-        const totalUsers = db.get('users').size().value();
-        const activeInvestments = db.get('investments').filter({ status: 'active' }).size().value();
+        const totalUsers = await User.countDocuments({ role: 'user' });
+        const activeInvestments = await Investment.countDocuments({ status: 'active' });
 
-        const totalDeposits = db.get('transactions')
-            .filter({ type: 'deposit', status: 'approved' })
-            .map('amount')
-            .value()
-            .reduce((sum, n) => sum + n, 0);
+        const depositAgg = await Transaction.aggregate([
+            { $match: { type: 'deposit', status: 'approved' } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
+        const withdrawalAgg = await Transaction.aggregate([
+            { $match: { type: 'withdrawal', status: 'approved' } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
 
-        const totalWithdrawals = db.get('transactions')
-            .filter({ type: 'withdrawal', status: 'approved' })
-            .map('amount')
-            .value()
-            .reduce((sum, n) => sum + n, 0);
+        const totalDeposits = depositAgg[0]?.total || 0;
+        const totalWithdrawals = withdrawalAgg[0]?.total || 0;
 
         res.json({
             totalUsers,
@@ -175,11 +178,15 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.getAllTransactions = async (req, res) => {
     try {
-        const transactions = db.get('transactions').orderBy(['created_at'], ['desc']).take(100).value();
-        const enriched = transactions.map(tx => {
-            const user = db.get('users').find({ id: tx.user_id }).value();
-            return { ...tx, username: user ? user.username : 'Unknown' };
-        });
+        const transactions = await Transaction.find().sort({ created_at: -1 }).limit(100);
+        const enriched = await Promise.all(transactions.map(async tx => {
+            const user = await User.findById(tx.user_id).select('username');
+            return {
+                ...tx.toObject(),
+                id: tx._id.toString(),
+                username: user ? user.username : 'Unknown'
+            };
+        }));
         res.json(enriched);
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
@@ -188,27 +195,16 @@ exports.getAllTransactions = async (req, res) => {
 
 exports.getAllInvestments = async (req, res) => {
     try {
-        const investments = db.get('investments').orderBy(['start_date'], ['desc']).value();
-        const enriched = investments.map(inv => {
-            const user = db.get('users').find({ id: inv.user_id }).value();
-            const plan = db.get('plans').find({ id: inv.plan_id }).value();
+        const investments = await Investment.find().sort({ start_date: -1 });
+        const enriched = await Promise.all(investments.map(async inv => {
+            const user = await User.findById(inv.user_id).select('username');
             return {
-                ...inv,
-                username: user ? user.username : 'Unknown',
-                plan_name: plan ? plan.name : 'Unknown'
+                ...inv.toObject(),
+                id: inv._id.toString(),
+                username: user ? user.username : 'Unknown'
             };
-        });
+        }));
         res.json(enriched);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-exports.deleteUser = async (req, res) => {
-    try {
-        const { id } = req.body;
-        db.get('users').remove({ id }).write();
-        res.json({ message: 'User deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }

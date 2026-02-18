@@ -3,9 +3,13 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
-const { initDb } = require('./db/init');
+// Connect to MongoDB
+require('./db/mongoose');
+const { User } = require('./db/models');
+
 const authRoutes = require('./routes/auth');
 const investRoutes = require('./routes/invest');
 const adminRoutes = require('./routes/admin');
@@ -21,26 +25,25 @@ app.use(cookieParser());
 // Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/invest', investRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Admin Routes
 // API Status
 app.get('/api', (req, res) => {
-    res.json({ message: '1000 Pips Climber API v1.2.0 is running' });
+    res.json({ message: '1000 Pips Climber API v2.0 - MongoDB' });
 });
 
+// HTML Routes
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
-
 app.get('/admin-login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin-login.html'));
 });
 
-// Catch-all route for SPA
+// Catch-all for SPA
 app.get('*', (req, res) => {
     if (req.url.startsWith('/api')) {
         return res.status(404).json({ message: 'API Route Not Found' });
@@ -48,18 +51,29 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Initialize Database and Start Server
 const PORT = process.env.PORT || 5000;
 
-async function startServer() {
+async function seedAdmin() {
     try {
-        await initDb();
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
+        const existing = await User.findOne({ role: 'admin' });
+        if (!existing) {
+            const hashed = await bcrypt.hash('admin123', 10);
+            await User.create({
+                username: 'admin',
+                email: 'admin@1000pips.com',
+                password: hashed,
+                fullname: 'Administrator',
+                role: 'admin',
+                status: 'active'
+            });
+            console.log('✅ Admin seeded: admin@1000pips.com / admin123');
+        }
     } catch (err) {
-        console.error('Failed to start server:', err);
+        console.error('Admin seed error:', err.message);
     }
 }
 
-startServer();
+app.listen(PORT, async () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    await seedAdmin();
+});

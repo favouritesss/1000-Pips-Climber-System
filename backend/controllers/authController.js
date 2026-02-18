@@ -1,41 +1,29 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../db/jsonStore');
-const shortid = require('shortid');
+const { User } = require('../db/models');
 
 exports.register = async (req, res) => {
     try {
         const { username, email, password, name, phone, country } = req.body;
 
-        const existingUser = db.get('users').find(u => u.username === username || u.email === email).value();
-
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
+        const existing = await User.findOne({ $or: [{ username }, { email }] });
+        if (existing) return res.status(400).json({ message: 'Username or email already exists' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = {
-            id: shortid.generate(),
+        const user = new User({
             username,
             email,
             password: hashedPassword,
-            fullname: name,
-            phone,
-            country,
-            balance: 0,
-            earnings: 0,
-            referral_bonus: 0,
-            role: 'user',
-            status: 'active',
-            created_at: new Date().toISOString()
-        };
+            fullname: name || '',
+            phone: phone || '',
+            country: country || ''
+        });
+        await user.save();
 
-        db.get('users').push(newUser).write();
-
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(201).json({ message: 'Registration successful! Please login.' });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error during registration' });
     }
 };
 
@@ -43,57 +31,55 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = db.get('users').find({ email }).value();
-
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
-        }
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ message: 'Invalid email or password' });
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
-        }
+        if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
 
-        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign(
+            { id: user._id.toString(), role: user.role },
+            process.env.JWT_SECRET || 'pips1000secret',
+            { expiresIn: '24h' }
+        );
 
-        res.cookie('token', token, { httpOnly: true });
         res.json({
-            token, user: {
-                id: user.id,
+            token,
+            user: {
+                id: user._id.toString(),
                 username: user.username,
                 email: user.email,
-                role: user.role,
                 fullname: user.fullname,
-                balance: user.balance || 0,
-                earnings: user.earnings || 0,
-                referral_bonus: user.referral_bonus || 0
+                role: user.role,
+                balance: user.balance,
+                earnings: user.earnings,
+                referral_bonus: user.referral_bonus
             }
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error during login' });
     }
 };
 
 exports.logout = (req, res) => {
     res.clearCookie('token');
-    res.json({ message: 'Logged out successfully' });
+    res.json({ message: 'Logged out' });
 };
 
 exports.getProfile = async (req, res) => {
     try {
-        const user = db.get('users').find({ id: req.user.id }).value();
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
         res.json({
-            id: user.id,
+            id: user._id.toString(),
             username: user.username,
             email: user.email,
             fullname: user.fullname,
-            balance: user.balance || 0,
-            earnings: user.earnings || 0,
-            referral_bonus: user.referral_bonus || 0,
+            balance: user.balance,
+            earnings: user.earnings,
+            referral_bonus: user.referral_bonus,
             role: user.role,
             status: user.status
         });

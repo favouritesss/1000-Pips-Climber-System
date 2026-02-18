@@ -2,6 +2,12 @@ const API_URL = '/api';
 let profitChart;
 
 function initProfitChart(transactions) {
+    // If Chart.js isn't loaded yet, retry after 500ms
+    if (typeof Chart === 'undefined') {
+        setTimeout(() => initProfitChart(transactions), 500);
+        return;
+    }
+
     const canvas = document.getElementById('profitChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');

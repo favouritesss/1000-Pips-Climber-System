@@ -1,6 +1,5 @@
-// Safely define API_URL
 if (typeof API_URL === 'undefined') {
-    var API_URL = '/api';
+    window.API_URL = '/api';
 }
 let adminDataInitialized = false;
 let allUsers = [];

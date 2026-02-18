@@ -1,8 +1,5 @@
-// API_URL is already declared in auth.js if included, but if not, we handle it safely.
-// However, dashboard.html includes auth.js BEFORE dashboard-v2.js.
-// So let's check if it exists before declaring.
 if (typeof API_URL === 'undefined') {
-    var API_URL = '/api';
+    window.API_URL = '/api';
 }
 let profitChart;
 
@@ -225,7 +222,7 @@ async function fetchDashboardData() {
 
     try {
         // Fetch fresh profile with cache-busting timestamp
-        const profileRes = await fetch(`${API_URL}/auth/profile?t=${Date.now()}`, {
+        const profileRes = await fetch(`${window.API_URL || '/api'}/auth/profile?t=${Date.now()}`, {
             headers: { 'Authorization': 'Bearer ' + token }
         });
 

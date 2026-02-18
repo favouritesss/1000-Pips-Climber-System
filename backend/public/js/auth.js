@@ -1,4 +1,6 @@
-const API_URL = '/api';
+if (typeof API_URL === 'undefined') {
+    window.API_URL = '/api';
+}
 
 async function login(email, password) {
     try {

@@ -52,6 +52,7 @@
 
     async refreshAll() {
         const token = localStorage.getItem('token');
+        if (!token) return;
         const headers = { 'Authorization': `Bearer ${token}` };
         
         try {
@@ -62,10 +63,10 @@
                 fetch('/api/admin/investments/all', { headers })
             ]);
             
-            this.stats = await sRes.json();
-            this.users = await uRes.json();
-            this.transactions = await tRes.json();
-            this.investments = await iRes.json();
+            if (sRes.ok) this.stats = await sRes.json();
+            if (uRes.ok) this.users = await uRes.json();
+            if (tRes.ok) this.transactions = await tRes.json();
+            if (iRes.ok) this.investments = await iRes.json();
         } catch(e) { console.error(e); }
     },
 
@@ -183,7 +184,7 @@
                 <div class="glass-card">
                     <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Pending Requests</p>
                     <h2 class="text-4xl font-black text-white"
-                        x-text="transactions.filter(t => t.status === 'pending').length"></h2>
+                        x-text="(transactions || []).filter(t => t.status === 'pending').length"></h2>
                     <div class="mt-4 flex items-center gap-2 text-amber-400 text-[10px] font-bold">
                         <i class="fas fa-clock"></i> NEEDS REVIEW
                     </div>
@@ -221,11 +222,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="tx in transactions.slice(0, 5)" :key="tx.id">
+                            <template x-for="tx in (transactions || []).slice(0, 5)" :key="tx.id">
                                 <tr class="border-b border-white/5 hover:bg-white/[0.02]">
                                     <td class="p-6 font-bold text-white text-sm" x-text="tx.username"></td>
                                     <td class="p-6 font-bold text-gray-400 text-xs uppercase" x-text="tx.type"></td>
-                                    <td class="p-6 font-black text-white" x-text="`$${tx.amount.toFixed(2)}`"></td>
+                                    <td class="p-6 font-black text-white" x-text="`$${(tx.amount || 0).toFixed(2)}`">
+                                    </td>
                                     <td class="p-6 text-center">
                                         <template x-if="tx.status === 'pending'">
                                             <div class="flex justify-center gap-2">
@@ -278,12 +280,14 @@
                         <template x-for="user in users" :key="user.id">
                             <tr class="border-b border-white/5 hover:bg-white/[0.02]">
                                 <td class="p-6">
-                                    <p class="text-white font-black" x-text="user.fullname || user.username"></p>
-                                    <p class="text-[10px] text-gray-500" x-text="user.email"></p>
+                                    <p class="text-white font-black text-sm md:text-base leading-tight"
+                                        x-text="user.fullname || user.username"></p>
+                                    <p class="text-[10px] md:text-[11px] text-gray-300 font-bold uppercase tracking-tight"
+                                        x-text="user.email"></p>
                                 </td>
                                 <td class="p-6 font-black text-lg"
-                                    :class="user.balance <= 50 ? 'text-red-500' : 'text-white'"
-                                    x-text="`$${user.balance.toLocaleString()}`"></td>
+                                    :class="(user.balance || 0) <= 50 ? 'text-red-500' : 'text-white'"
+                                    x-text="`$${(user.balance || 0).toLocaleString()}`"></td>
                                 <td class="p-6">
                                     <span @click="toggleUserStatus(user.id, user.status)"
                                         :class="user.status === 'active' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'"
@@ -381,8 +385,10 @@
                             <tr class="border-b border-white/5">
                                 <td class="p-6 font-bold text-white" x-text="inv.username"></td>
                                 <td class="p-6 font-bold text-gray-400 text-xs uppercase" x-text="inv.plan_name"></td>
-                                <td class="p-6 font-black text-white" x-text="`$${inv.amount.toLocaleString()}`"></td>
-                                <td class="p-6 font-black text-green-400" x-text="`+$${inv.roi_accrued.toFixed(2)}`">
+                                <td class="p-6 font-black text-white" x-text="`$${(inv.amount || 0).toLocaleString()}`">
+                                </td>
+                                <td class="p-6 font-black text-green-400"
+                                    x-text="`+$${(inv.roi_accrued || 0).toFixed(2)}`">
                                 </td>
                             </tr>
                         </template>

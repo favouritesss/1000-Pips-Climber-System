@@ -27,6 +27,11 @@ app.use('/api/invest', investRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Admin Routes
+// API Status
+app.get('/api', (req, res) => {
+    res.json({ message: '1000 Pips Climber API v1.2.0 is running' });
+});
+
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });

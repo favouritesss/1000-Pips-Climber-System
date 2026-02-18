@@ -1,4 +1,7 @@
-const API_URL = '/api';
+// Safely define API_URL
+if (typeof API_URL === 'undefined') {
+    var API_URL = '/api';
+}
 let allUsers = [];
 
 async function fetchAdminData() {
@@ -196,8 +199,23 @@ function renderAllTransactions(transactions) {
 }
 
 // Make this function global for inline onclick
-// openFundModal is handled by Alpine.js in admin.html, removing duplicate or conflicting global definition.
-// Window property assignment removed to ensure Alpine x-data takes precedence.
+window.openFundModal = function (userId, username) {
+    const alpineEl = document.querySelector('[x-data]');
+    if (alpineEl && alpineEl.__x) {
+        const data = alpineEl.__x.$data;
+        data.selectedUser = { id: userId, username: username };
+        data.fundMode = 'add';
+        data.showFundModal = true;
+        data.fundAmount = '';
+        setTimeout(() => {
+            const input = document.querySelector('input[x-model="fundAmount"]');
+            if (input) input.focus();
+        }, 100);
+    } else {
+        console.error('Alpine component not found');
+        alert('Error: Admin dashboard component not initialized.');
+    }
+}
 
 function closeFundModal() {
     const alpineEl = document.querySelector('[x-data]');

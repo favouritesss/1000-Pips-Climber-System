@@ -8,12 +8,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <script>var API_URL = '/api';</script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         :root {
             --primary: #EF4444;
             /* Admin uses Red as primary for "danger/control" feel */
             --primary-glow: rgba(239, 68, 68, 0.4);
+        }
+
+        @media (max-width: 1024px) {
+
+            .sidebar-link span,
+            .sidebar-link i {
+                color: #ffffff !important;
+                font-weight: 800;
+                opacity: 1 !important;
+            }
+
+            .sidebar {
+                background: #020617 !important;
+                backdrop-filter: blur(20px);
+                box-shadow: 20px 0 50px rgba(0, 0, 0, 0.8);
+            }
+
+            .sidebar-link.active {
+                background: #ef4444 !important;
+            }
         }
 
         .btn-admin {
@@ -58,10 +79,10 @@
         
         try {
             const [sRes, uRes, tRes, iRes] = await Promise.all([
-                fetch('/api/admin/stats', { headers }),
-                fetch('/api/admin/users', { headers }),
-                fetch('/api/admin/transactions/all', { headers }),
-                fetch('/api/admin/investments/all', { headers })
+                fetch(`${API_URL}/admin/stats`, { headers }),
+                fetch(`${API_URL}/admin/users`, { headers }),
+                fetch(`${API_URL}/admin/transactions/all`, { headers }),
+                fetch(`${API_URL}/admin/investments/all`, { headers })
             ]);
             
             if (sRes.ok) this.stats = await sRes.json();

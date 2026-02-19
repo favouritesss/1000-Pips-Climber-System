@@ -33,10 +33,15 @@ async function fetchAdminData() {
         if (!statsRes.ok) throw new Error('Failed to fetch admin statistics');
         const stats = await statsRes.json();
 
-        document.getElementById('totalUsers').innerText = stats.totalUsers;
-        document.getElementById('totalDeposits').innerText = `$${stats.totalDeposits.toFixed(2)}`;
-        document.getElementById('totalWithdrawals').innerText = `$${stats.totalWithdrawals.toFixed(2)}`;
-        document.getElementById('revenue').innerText = `$${stats.revenue.toFixed(2)}`;
+        const updateEl = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = val;
+        };
+
+        updateEl('totalUsers', stats.totalUsers);
+        updateEl('totalDeposits', `$${(stats.totalDeposits || 0).toFixed(2)}`);
+        updateEl('totalWithdrawals', `$${(stats.totalWithdrawals || 0).toFixed(2)}`);
+        updateEl('revenue', `$${(stats.revenue || 0).toFixed(2)}`);
 
         const pendingRes = await fetch(`${API_URL}/admin/transactions/pending`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -228,45 +233,9 @@ function closeFundModal() {
     }
 }
 
+// Redeclare executeFunding if needed by old buttons, but redirect to safe logic
 async function executeFunding() {
-    const userId = document.getElementById('fundUserId').value;
-    const amount = document.getElementById('fundAmount').value;
-
-    if (!amount || isNaN(amount) || amount <= 0) {
-        alert('Please enter a valid positive amount');
-        return;
-    }
-
-    const token = localStorage.getItem('token');
-    const btn = event.target;
-    const originalText = btn.innerText;
-    btn.innerText = 'Processing...';
-    btn.disabled = true;
-
-    try {
-        const res = await fetch(`${API_URL}/admin/users/fund`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ userId, amount: parseFloat(amount) })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-            closeFundModal();
-            fetchAdminData();
-        } else {
-            alert(data.message || 'Error funding account');
-        }
-    } catch (err) {
-        console.error(err);
-        alert('Network error. Please try again.');
-    } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
+    console.warn('Deprecated executeFunding called. Use submitFunding in Alpine.');
 }
 
 async function approveTx(id) {

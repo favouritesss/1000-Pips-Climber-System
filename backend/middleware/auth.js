@@ -24,7 +24,8 @@ const auth = (req, res, next) => {
 
 const adminAuth = (req, res, next) => {
     auth(req, res, () => {
-        if (req.user.role !== 'admin') {
+        if (!req.user || req.user.role !== 'admin') {
+            console.warn(`Admin access denied for user: ${req.user?.id}, role: ${req.user?.role}`);
             return res.status(403).json({ message: 'Access denied. Admin only.' });
         }
         next();

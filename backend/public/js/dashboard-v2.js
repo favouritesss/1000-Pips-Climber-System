@@ -242,7 +242,7 @@ async function fetchDashboardData() {
 
         if (balanceEl) {
             balanceEl.innerText = '$' + parseFloat(user.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
-            if ((user.balance || 0) <= 50) {
+            if ((user.balance || 0) <= 160) {
                 balanceEl.classList.add('text-red-500');
                 balanceEl.classList.remove('text-white');
                 const warning = document.getElementById('balanceWarning');
@@ -330,12 +330,12 @@ function handlePlaceTrade() {
     const user = JSON.parse(userJson);
     const balance = parseFloat(user.balance || 0);
 
-    if (balance <= 50) {
+    if (balance <= 160) {
         // Show a more premium looking alert/notification if possible, but alert is the simplest
         Swal.fire({
             icon: 'error',
             title: 'Insufficient Balance',
-            text: 'Your balance is too low to place a trade. Minimum deposit of $50 required.',
+            text: 'Your balance is too low to place a trade. Minimum deposit of $160 required.',
             background: '#0F172A',
             color: '#fff',
             confirmButtonColor: '#3B82F6'

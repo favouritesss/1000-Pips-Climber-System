@@ -28,6 +28,7 @@
 </head>
 
 <body x-data="{ 
+    mobileMenu: false,
     tab: 'overview',
     users: [],
     transactions: [],
@@ -116,8 +117,9 @@
         await this.refreshAll();
     }
 }">
-    <aside class="sidebar flex flex-col p-6 overflow-y-auto custom-scrollbar">
-        <div class="flex items-center gap-4 mb-10 px-2 lg:px-4">
+    <aside class="sidebar flex flex-col p-6 overflow-y-auto custom-scrollbar"
+        :class="mobileMenu ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+        <div class="flex items-center gap-4 mb-10 px-2 lg:px-4 desktop-only">
             <div class="p-2 bg-red-500/10 rounded-xl border border-red-500/20 text-red-500">
                 <i class="fas fa-user-shield text-xl"></i>
             </div>
@@ -128,27 +130,29 @@
         </div>
 
         <nav class="sidebar-nav flex-1 space-y-2">
-            <button @click="tab = 'overview'" :class="tab === 'overview' ? 'active shadow-red-500/20 bg-red-600' : ''"
+            <button @click="tab = 'overview'; if(window.innerWidth < 1024) mobileMenu = false"
+                :class="tab === 'overview' ? 'active shadow-red-500/20 bg-red-600' : ''"
                 class="sidebar-link w-full text-left">
                 <i class="fas fa-chart-pie"></i> <span class="link-text">Control Hub</span>
             </button>
-            <button @click="tab = 'users'" :class="tab === 'users' ? 'active shadow-red-500/20 bg-red-600' : ''"
+            <button @click="tab = 'users'; if(window.innerWidth < 1024) mobileMenu = false"
+                :class="tab === 'users' ? 'active shadow-red-500/20 bg-red-600' : ''"
                 class="sidebar-link w-full text-left">
                 <i class="fas fa-users-gear"></i> <span class="link-text">User Registry</span>
             </button>
-            <button @click="tab = 'transactions'"
+            <button @click="tab = 'transactions'; if(window.innerWidth < 1024) mobileMenu = false"
                 :class="tab === 'transactions' ? 'active shadow-red-500/20 bg-red-600' : ''"
                 class="sidebar-link w-full text-left">
                 <i class="fas fa-money-bill-transfer"></i> <span class="link-text">Ledger</span>
             </button>
-            <button @click="tab = 'investments'"
+            <button @click="tab = 'investments'; if(window.innerWidth < 1024) mobileMenu = false"
                 :class="tab === 'investments' ? 'active shadow-red-500/20 bg-red-600' : ''"
                 class="sidebar-link w-full text-left">
                 <i class="fas fa-vault"></i> <span class="link-text">Growth Plans</span>
             </button>
         </nav>
 
-        <div class="mt-auto pt-8 border-t border-white/5">
+        <div class="mt-auto pt-8 border-t border-white/5 desktop-only">
             <button onclick="logout()"
                 class="w-full flex items-center justify-center gap-3 p-3 rounded-xl bg-gray-800 text-gray-400 hover:bg-white/5 hover:text-white transition-all text-sm font-bold border border-white/5">
                 <i class="fas fa-power-off"></i> <span class="link-text">Exit Terminal</span>
@@ -157,6 +161,18 @@
     </aside>
 
     <main class="main-content">
+        <!-- Mobile Header -->
+        <div class="lg:hidden flex justify-between items-center mb-10">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-red-500/10 rounded-lg border border-red-500/20 text-red-500">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <span class="font-black text-white text-sm uppercase tracking-tighter">Admin Terminal</span>
+            </div>
+            <button @click="mobileMenu = !mobileMenu" class="p-2 text-white glass rounded-lg">
+                <i class="fas" :class="mobileMenu ? 'fa-times' : 'fa-bars-staggered'"></i>
+            </button>
+        </div>
         <!-- Overview Tab -->
         <div x-show="tab === 'overview'" class="space-y-12">
             <header>

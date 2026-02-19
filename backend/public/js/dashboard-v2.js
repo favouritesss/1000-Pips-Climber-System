@@ -1,6 +1,4 @@
-if (typeof API_URL === 'undefined') {
-    window.API_URL = '/api';
-}
+var API_URL = '/api';
 let profitChart;
 
 function initProfitChart(transactions) {
@@ -222,7 +220,7 @@ async function fetchDashboardData() {
 
     try {
         // Fetch fresh profile with cache-busting timestamp
-        const profileRes = await fetch(`${window.API_URL || '/api'}/auth/profile?t=${Date.now()}`, {
+        const profileRes = await fetch(`${API_URL}/auth/profile?t=${Date.now()}`, {
             headers: { 'Authorization': 'Bearer ' + token }
         });
 

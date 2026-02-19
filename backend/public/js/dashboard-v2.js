@@ -56,9 +56,9 @@ function initProfitChart(transactions) {
                 datasets: [{
                     label: 'Portfolio Value',
                     data: dataPoints,
-                    borderColor: '#22d3ee', // Bright Cyan for high contrast
+                    borderColor: '#f6f9faff',
                     borderWidth: 4,
-                    pointBackgroundColor: '#22d3ee',
+                    pointBackgroundColor: '#f5fafbff',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
                     pointRadius: 4,
@@ -69,9 +69,9 @@ function initProfitChart(transactions) {
                         var chart = context.chart;
                         var chartCtx = chart.ctx;
                         var chartArea = chart.chartArea;
-                        if (!chartArea) return 'rgba(59,130,246,0.1)';
+                        if (!chartArea) return 'rgba(206, 198, 198, 0.1)';
                         var gradient = chartCtx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0)');
+                        gradient.addColorStop(0, 'rgba(249, 250, 251, 0)');
                         gradient.addColorStop(1, 'rgba(59, 130, 246, 0.25)');
                         return gradient;
                     }

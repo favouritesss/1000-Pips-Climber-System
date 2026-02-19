@@ -1,9 +1,14 @@
 const jwt = require('jsonwebtoken');
 
 const auth = (req, res, next) => {
-    const token = req.cookies.token || req.header('Authorization')?.replace('Bearer ', '');
+    let token = req.header('Authorization')?.replace('Bearer ', '');
 
+    // If no header token, try cookies
     if (!token) {
+        token = req.cookies.token;
+    }
+
+    if (!token || token === 'null' || token === 'undefined') {
         return res.status(401).json({ message: 'No token, authorization denied' });
     }
 
@@ -12,6 +17,7 @@ const auth = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (err) {
+        console.error('Auth Middleware Error:', err.message);
         res.status(401).json({ message: 'Token is not valid' });
     }
 };

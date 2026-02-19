@@ -8,12 +8,17 @@ async function fetchAdminData() {
         window.location.href = '/admin-login.html';
         return;
     }
-
     try {
-        // First verify if the user is actually an admin
         const profileRes = await fetch(`${API_URL}/auth/profile`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!profileRes.ok) {
+            console.error('Admin profile verify failed:', profileRes.status);
+            window.location.href = '/admin-login.html';
+            return;
+        }
+
         const user = await profileRes.json();
 
         if (user.role !== 'admin') {

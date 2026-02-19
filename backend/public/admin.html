@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <script>var API_URL = '/api';</script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         :root {
             --primary: #EF4444;
@@ -107,7 +109,11 @@
 
     async submitFunding() {
         if(!this.fundAmount || isNaN(this.fundAmount)) return;
-        const endpoint = this.fundMode === 'add' ? '/api/admin/users/fund' : '/api/admin/users/override-balance';
+        let endpoint = '';
+        if (this.fundMode === 'add') endpoint = '/api/admin/users/fund';
+        else if (this.fundMode === 'set') endpoint = '/api/admin/users/override-balance';
+        else if (this.fundMode === 'profit') endpoint = '/api/admin/users/override-earnings';
+
         const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 
@@ -116,10 +122,19 @@
             },
             body: JSON.stringify({ userId: this.selectedUser.id, amount: parseFloat(this.fundAmount) })
         });
+
         if(res.ok) {
             const msg = await res.json();
-            alert(msg.message);
+            Swal.fire({
+                icon: 'success',
+                title: 'System Updated',
+                text: msg.message,
+                background: '#020617',
+                color: '#fff',
+                confirmButtonColor: '#ef4444'
+            });
             this.showFundModal = false;
+
             this.fundAmount = '';
             await this.refreshAll();
         }
@@ -454,11 +469,17 @@
                         :class="fundMode === 'set' ? 'bg-amber-600 text-white' : 'text-gray-500 hover:text-white'"
                         class="flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Set
                         Balance</button>
+                    <button @click="fundMode = 'profit'"
+                        :class="fundMode === 'profit' ? 'bg-emerald-600 text-white' : 'text-gray-500 hover:text-white'"
+                        class="flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Set
+                        Profit</button>
                 </div>
+
 
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2"
-                        x-text="fundMode === 'add' ? 'Volume to Inject ($)' : 'New Absolute Balance ($)'"></label>
+                        x-text="fundMode === 'add' ? 'Volume to Inject ($)' : (fundMode === 'set' ? 'New Absolute Balance ($)' : 'Update Total Earnings ($)')"></label>
+
                     <input type="number" x-model="fundAmount" class="input-group text-center text-2xl font-black"
                         placeholder="0.00">
                 </div>

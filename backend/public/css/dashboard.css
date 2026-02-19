@@ -28,7 +28,9 @@ body {
     overflow-x: hidden;
 }
 
-[x-cloak] { display: none !important; }
+[x-cloak] {
+    display: none !important;
+}
 
 /* Glassmorphism Components */
 .glass {
@@ -101,7 +103,9 @@ body {
     margin-left: 280px;
     padding: 3rem;
     transition: all 0.3s ease;
+    overflow-x: hidden;
 }
+
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
@@ -109,13 +113,18 @@ body {
         width: 80px;
         padding: 1.5rem 0.5rem;
     }
-    .sidebar .link-text, .sidebar .logo-text, .sidebar .profile-details {
+
+    .sidebar .link-text,
+    .sidebar .logo-text,
+    .sidebar .profile-details {
         display: none;
     }
+
     .main-content {
         margin-left: 80px;
         padding: 2rem;
     }
+
     .sidebar-link {
         justify-content: center;
         padding: 1rem;
@@ -133,24 +142,30 @@ body {
         border-top: 1px solid var(--glass-border);
         padding: 0.5rem;
     }
+
     .sidebar-nav {
         flex-direction: row !important;
         justify-content: space-around;
         width: 100%;
         margin-bottom: 0 !important;
     }
+
     .sidebar-link {
         margin-bottom: 0;
         flex-direction: column;
         gap: 0.25rem;
         font-size: 0.75rem;
     }
+
     .main-content {
         margin-left: 0;
         margin-bottom: 80px;
         padding: 1.5rem;
     }
-    .desktop-only { display: none !important; }
+
+    .desktop-only {
+        display: none !important;
+    }
 }
 
 /* Shared UI elements */
@@ -188,10 +203,19 @@ body {
 }
 
 /* Custom Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
 ::-webkit-scrollbar-thumb {
     background: var(--glass-border);
     border-radius: 10px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}

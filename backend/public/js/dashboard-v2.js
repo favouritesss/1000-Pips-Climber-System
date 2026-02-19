@@ -320,3 +320,28 @@ if (document.readyState === 'loading') {
 } else {
     fetchDashboardData();
 }
+
+function handlePlaceTrade() {
+    const userJson = localStorage.getItem('user');
+    if (!userJson) {
+        window.location.href = '/login.html';
+        return;
+    }
+    const user = JSON.parse(userJson);
+    const balance = parseFloat(user.balance || 0);
+
+    if (balance <= 50) {
+        // Show a more premium looking alert/notification if possible, but alert is the simplest
+        Swal.fire({
+            icon: 'error',
+            title: 'Insufficient Balance',
+            text: 'Your balance is too low to place a trade. Minimum deposit of $50 required.',
+            background: '#0F172A',
+            color: '#fff',
+            confirmButtonColor: '#3B82F6'
+        });
+    } else {
+        window.location.href = 'trade.html';
+    }
+}
+

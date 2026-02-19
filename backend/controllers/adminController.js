@@ -75,6 +75,22 @@ exports.overrideBalance = async (req, res) => {
     }
 };
 
+exports.overrideEarnings = async (req, res) => {
+    try {
+        const { userId, amount } = req.body;
+        const parsedAmount = parseFloat(amount);
+        if (!userId || isNaN(parsedAmount)) return res.status(400).json({ message: 'Invalid data' });
+
+        const user = await User.findByIdAndUpdate(userId, { earnings: parsedAmount }, { new: true });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        res.json({ message: `Earnings set to $${parsedAmount}` });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
 exports.updateUserStatus = async (req, res) => {
     try {
         const { id, status } = req.body;
